@@ -6,8 +6,11 @@ HEADERS = $(wildcard src/*.h)
 
 TARGET = ./coursework
 
-build:
+build: $(SOURCES) $(HEADERS)
 	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET)
 
 run: build
 	@$(TARGET)
+
+.PHONY: build run
+.IGNORE: run
