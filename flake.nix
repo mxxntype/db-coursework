@@ -1,5 +1,5 @@
 {
-    description = "";
+    description = "mxxntype's MIREA Database coursework";
 
     inputs = {
         # SECTION: Core inputs.
@@ -18,6 +18,6 @@
         src = ./.;
 
         # Snowfall Lib configuration.
-        snowfall.namespace = "aeon";
+        snowfall.namespace = "db-coursework";
     };
 }
