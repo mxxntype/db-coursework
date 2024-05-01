@@ -40,7 +40,7 @@ class DatabaseGUI(QWidget):
         self.show()
 
     def run_sql_query(self):
-        rows = self.db_connection.run_query("SELECT * FROM authors")
+        rows = self.db_connection.select("SELECT * FROM authors")
         for row in rows:
             self.text_area.append(str(row))
 
