@@ -21,6 +21,7 @@ pkgs.mkShell {
         (python311.withPackages (ps: with ps; [
             psycopg2
             pyqt6
+            qdarkstyle
         ]))
     ];
 }
