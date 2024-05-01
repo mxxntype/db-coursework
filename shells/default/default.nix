@@ -17,5 +17,10 @@ pkgs.mkShell {
         gtkmm4.dev
         glibmm.dev
         glib
+
+        (python311.withPackages (ps: with ps; [
+            psycopg2
+            pyqt6
+        ]))
     ];
 }
