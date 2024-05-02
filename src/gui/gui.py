@@ -1,7 +1,10 @@
 from database.connection import DatabaseConnection
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
+    QComboBox,
+    QListWidget,
     QPushButton,
+    QTabWidget,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -9,59 +12,68 @@ from PyQt6.QtWidgets import (
 
 
 class DatabaseGUI(QWidget):
-    font_family: str = "IosevkaTerm NF"
-    font_size: int = 24
+    __font_family: str = "IosevkaTerm NF"
+    __font_size: int = 24
+    font: QFont = QFont(__font_family, __font_size)
+    db: DatabaseConnection = DatabaseConnection()
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.init_ui()
 
-    def init_ui(self):
+    def init_ui(self) -> None:
         self.setWindowTitle("mxxntype's DB Coursework")
         self.setGeometry(600, 800, 800, 600)
 
         layout = QVBoxLayout()
-
-        # Create the text area.
-        self.db_connection = DatabaseConnection()
-        self.text_area = QTextEdit()
-        self.text_area.setReadOnly(True)
-        self.text_area.setFont(QFont(self.font_family, self.font_size))
-        layout.addWidget(self.text_area)
-
-        # Create the button.
-        self.button = QPushButton("Execute Query")
-        self.button.clicked.connect(self.run_sql_query)
-        self.button.setFont(QFont(self.font_family, self.font_size))
-        layout.addWidget(self.button)
+        self.tab_widget = QTabWidget()
+        self.tab_widget.addTab(self.create_authors_tab(), "Authors")
+        self.tab_widget.addTab(self.create_compose_tab(), "Compose a post")
+        self.tab_widget.setFont(self.font)
+        layout.addWidget(self.tab_widget)
 
         self.setLayout(layout)
         self.show()
 
-    def run_sql_query(self):
-        rows = self.db_connection.select("SELECT * FROM authors")
-        for row in rows:
-            self.text_area.append(str(row))
+    def create_authors_tab(self) -> QWidget:
+        self.author_list = QListWidget()
+        self.author_list.setFont(self.font)
 
+        authors: list[tuple] = self.db.select("SELECT * FROM authors")
+        list(map(lambda author: self.author_list.addItem(str(author)), authors))
 
-# class GUI(QWidget):
-#     def __init__(self):
-#         super().__init__()
-#         self.setWindowTitle("Tab Example")
-#         self.resize(300, 200)
+        layout = QVBoxLayout()
+        layout.addWidget(self.author_list)
+        tab = QWidget()
+        tab.setLayout(layout)
+        return tab
 
-#         layout = QVBoxLayout()
-#         self.tab_widget = QTabWidget()
-#         self.tab_widget.addTab(self.create_tab("Tab 1"), "Tab 1")
-#         self.tab_widget.addTab(self.create_tab("Tab 2"), "Tab 2")
-#         self.tab_widget.addTab(self.create_tab("Tab 3"), "Tab 3")
-#         layout.addWidget(self.tab_widget)
+    def create_compose_tab(self) -> QWidget:
+        self.compose_text_area = QTextEdit()
+        self.compose_text_area.setFont(self.font)
+        self.compose_text_area.setPlaceholderText("Let your soul out...")
 
-#         self.setLayout(layout)
+        authors = self.db.select("SELECT * FROM authors")
+        authors = list(map(lambda author: str(author), authors))
 
-#     def create_tab(self, title):
-#         tab = QWidget()
-#         layout = QVBoxLayout()
-#         layout.addWidget(QPushButton(title))
-#         tab.setLayout(layout)
-#         return tab
+        author_choice = QComboBox()
+        author_choice.addItems(authors)
+        author_choice.setFont(self.font)
+
+        submit_button = QPushButton("Submit post")
+        submit_button.setFont(self.font)
+        submit_button.clicked.connect(
+            lambda: self.db.upload_post(
+                text=self.compose_text_area.toPlainText(),
+                author_id=eval(author_choice.currentText())[0],
+                title="Sample post",
+            )
+        )
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.compose_text_area)
+        layout.addWidget(author_choice)
+        layout.addWidget(submit_button)
+        tab = QWidget()
+        tab.setLayout(layout)
+        return tab

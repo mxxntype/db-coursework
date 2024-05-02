@@ -2,6 +2,7 @@ import random
 import string
 
 import psycopg2 as postgresql
+from database.log import log_function_call
 
 
 class DatabaseConnection:
@@ -25,6 +26,7 @@ class DatabaseConnection:
         self.add_random_authors()
 
     # Run a SQL query, returning all rows.
+    @log_function_call
     def select(self, query: str) -> list[tuple]:
         cursor = self.db_connection.cursor()
         cursor.execute(query)
@@ -37,10 +39,10 @@ class DatabaseConnection:
             cursor.execute(txn.read())
         cursor.execute(
             """
-               DELETE FROM authors WHERE true;
-               DELETE FROM posts WHERE true;
-               DELETE FROM attachments WHERE true;
                DELETE FROM ratings WHERE true;
+               DELETE FROM posts WHERE true;
+               DELETE FROM authors WHERE true;
+               DELETE FROM attachments WHERE true;
            """
         )
 
@@ -64,6 +66,14 @@ class DatabaseConnection:
                 for _ in range(random.randint(min, max))
             )
             phone: str = "".join(random.choice(string.digits) for _ in range(11))
-            cursor.execute(
-                f"INSERT INTO authors (name, surname, middle_name, phone) VALUES ('{name}', '{surname}', '{middle_name}', '+{phone}')"
-            )
+            query = "INSERT INTO authors (name, surname, middle_name, phone) VALUES (%s, %s, %s, %s)"
+            cursor.execute(query, (name, surname, middle_name, phone))
+
+    @log_function_call
+    def upload_post(
+        self, text: str, author_id: int, title: str = "New post", attachment_id=None
+    ) -> None:
+        cursor = self.db_connection.cursor()
+        query = "INSERT INTO posts (text, title, author_id, attachment_id) VALUES (%s, %s, %s, %s)"
+        cursor.execute(query, (text, title, author_id, attachment_id))
+        self.db_connection.commit()
