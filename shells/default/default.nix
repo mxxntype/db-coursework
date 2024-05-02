@@ -12,16 +12,12 @@ pkgs.mkShell {
 
     buildInputs = with pkgs; [
         postgresql
-        libpqxx
-        glade
-        gtkmm4.dev
-        glibmm.dev
-        glib
-
+        ruff-lsp
         (python311.withPackages (ps: with ps; [
             psycopg2
             pyqt6
             qdarkstyle
+            python-lsp-server
         ]))
     ];
 }

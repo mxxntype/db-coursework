@@ -1,6 +1,7 @@
-import psycopg2 as postgresql
-import string
 import random
+import string
+
+import psycopg2 as postgresql
 
 
 class DatabaseConnection:
