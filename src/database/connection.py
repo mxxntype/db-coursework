@@ -35,16 +35,16 @@ class DatabaseConnection:
     # Run the startup migrations and delete all rows from all tables.
     def sanitize(self) -> None:
         cursor = self.db_connection.cursor()
+
         with open("migrations/001.sql", "r") as txn:
             cursor.execute(txn.read())
-        cursor.execute(
-            """
-               DELETE FROM ratings WHERE true;
-               DELETE FROM posts WHERE true;
-               DELETE FROM authors WHERE true;
-               DELETE FROM attachments WHERE true;
-           """
-        )
+
+        cursor.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+        tables: list = [table[0] for table in cursor.fetchall()]
+        for table in tables:
+            cursor.execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;")
+
+        self.db_connection.commit()
 
     # Append rows with random garbage to the `authors` table.
     def add_random_authors(self) -> None:
@@ -68,6 +68,7 @@ class DatabaseConnection:
             phone: str = "".join(random.choice(string.digits) for _ in range(11))
             query = "INSERT INTO authors (name, surname, middle_name, phone) VALUES (%s, %s, %s, %s)"
             cursor.execute(query, (name, surname, middle_name, phone))
+        self.db_connection.commit()
 
     @log_function_call
     def upload_post(

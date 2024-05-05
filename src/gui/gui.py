@@ -2,6 +2,9 @@ from database.connection import DatabaseConnection
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
     QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
     QListWidget,
     QPushButton,
     QTabWidget,
@@ -64,7 +67,14 @@ class DatabaseGUI(QWidget):
     #
     # It is possible to go to all the author's posts and put a rating for the post.
     def create_read_tab(self) -> QWidget:
+        self.post_list = QListWidget()
+        self.post_list.setFont(self.font)
+
+        posts: list[tuple] = self.db.select("SELECT * FROM posts")
+        list(map(lambda post: self.post_list.addItem(str(post)), posts))
+
         layout = QVBoxLayout()
+        layout.addWidget(self.post_list)
         tab = QWidget()
         tab.setLayout(layout)
         return tab
@@ -74,9 +84,33 @@ class DatabaseGUI(QWidget):
     # Available only if the user is logged in as the author. Otherwise, it should be disabled,
     # and inform the user that the post cannot be published from a regular `user` account.
     def create_compose_tab(self) -> QWidget:
+        title_font = QFont(self.__font_family, self.__font_size * 2)
+        self.compose_title_label = QLabel("Title:")
+        self.compose_title_label.setFont(title_font)
+
+        self.compose_title_line = QLineEdit()
+        self.compose_title_line.setFont(title_font)
+        self.compose_title_line.setPlaceholderText("The title of your post")
+        self.compose_title_line.setMaxLength(128)
+        self.compose_title_line.textChanged.connect(
+            lambda: self.compose_title_chars.setText(
+                f"{len(self.compose_title_line.text())}/{self.compose_title_line.maxLength()}"
+            )
+        )
+
+        self.compose_title_chars = QLabel(f"0/{self.compose_title_line.maxLength()}")
+        self.compose_title_chars.setFont(title_font)
+
+        title_layout = QHBoxLayout()
+        title_layout.addWidget(self.compose_title_label)
+        title_layout.addWidget(self.compose_title_line)
+        title_layout.addWidget(self.compose_title_chars)
+
         self.compose_text_area = QTextEdit()
         self.compose_text_area.setFont(self.font)
-        self.compose_text_area.setPlaceholderText("Let your soul out...")
+        self.compose_text_area.setPlaceholderText(
+            "The text of your post. Let your soul out..."
+        )
 
         authors = self.db.select("SELECT * FROM authors")
         authors = list(map(lambda author: str(author), authors))
@@ -91,16 +125,17 @@ class DatabaseGUI(QWidget):
             lambda: self.db.upload_post(
                 text=self.compose_text_area.toPlainText(),
                 author_id=eval(author_choice.currentText())[0],
-                title="Sample post",
+                title=self.compose_title_line.text(),
             )
         )
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.compose_text_area)
-        layout.addWidget(author_choice)
-        layout.addWidget(submit_button)
+        tab_layout = QVBoxLayout()
+        tab_layout.addLayout(title_layout)
+        tab_layout.addWidget(self.compose_text_area)
+        tab_layout.addWidget(author_choice)
+        tab_layout.addWidget(submit_button)
         tab = QWidget()
-        tab.setLayout(layout)
+        tab.setLayout(tab_layout)
         return tab
 
     # INFO: A tab for viewing all the media available in the `attachments` table.
