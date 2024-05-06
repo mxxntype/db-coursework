@@ -1,4 +1,6 @@
-from database.connection import DatabaseConnection
+from connection import DatabaseConnection
+from log import create_named_logger
+from logging import Logger
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
     QComboBox,
@@ -18,11 +20,19 @@ class DatabaseGUI(QWidget):
     __font_family: str = "IosevkaTerm NF"
     __font_size: int = 24
     font: QFont = QFont(__font_family, __font_size)
-    db: DatabaseConnection = DatabaseConnection()
+    db: DatabaseConnection
+    logger: Logger = create_named_logger("GUI")
 
     def __init__(self) -> None:
         super().__init__()
-        self.init_ui()
+        try:
+            self.db = DatabaseConnection()
+        except Exception as error:
+            self.logger.error("Could not connect to backend")
+            raise Exception(error)
+        else:
+            self.logger.info("Connected to backend")
+            self.init_ui()
 
     def init_ui(self) -> None:
         self.setWindowTitle("mxxntype's DB Coursework")

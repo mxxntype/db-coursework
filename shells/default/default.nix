@@ -18,6 +18,7 @@ pkgs.mkShell {
             pyqt6
             qdarkstyle
             python-lsp-server
+            colorlog
         ]))
     ];
 }

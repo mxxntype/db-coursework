@@ -1,8 +1,8 @@
-version: '3.8'
+version: "3.8"
 
 services:
     postgres:
-        image: postgres:latest
+        image: postgres:16
         hostname: postgres-db
         restart: always
         environment:
@@ -10,7 +10,7 @@ services:
             POSTGRES_PASSWORD: ${DB_PASSWORD}
             POSTGRES_DB: ${DB_NAME}
         volumes:
-            - postgres-data:/var/lib/postgresql/data
+            - ./.postgres-data:/var/lib/postgresql/data
         ports:
             - "5432:5432"
 
@@ -29,5 +29,4 @@ services:
             - pgadmin-data:/var/lib/pgadmin
 
 volumes:
-    postgres-data:
     pgadmin-data:

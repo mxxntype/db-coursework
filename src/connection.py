@@ -1,43 +1,76 @@
+import os
 import random
 import string
+from logging import Logger
 
 import psycopg2 as postgresql
-from database.log import log_function_call
+from log import create_named_logger
 
 
 class DatabaseConnection:
+    logger: Logger = create_named_logger("DB")
+    db_connection: postgresql.extensions.connection
+
     def __init__(
         self,
-        database: str = "coursework",
-        user: str = "user",
-        password: str = "password",
-        host: str = "localhost",
-        port: int = 5432,
+        db_name: str = os.environ["DB_NAME"],
+        db_user: str = os.environ["DB_USER"],
+        db_passwd: str = os.environ["DB_PASSWORD"],
+        db_host: str = "localhost",
+        db_port: int = 5432,
     ) -> None:
-        self.db_connection = postgresql.connect(
-            database=database,
-            user=user,
-            password=password,
-            host=host,
-            port=port,
-        )
+        meta: str = f"'{db_user}@{db_host}:{db_port}'"
+        self.logger.info(f"Logging into PostgreSQL: {meta}")
+        try:
+            self.db_connection = postgresql.connect(
+                database=db_name,
+                user=db_user,
+                password=db_passwd,
+                host=db_host,
+                port=db_port,
+            )
+        except Exception as error:
+            error = str(error).strip()
+            self.logger.error(error)
+            raise Exception(error)
+        else:
+            self.logger.info(f"Successfully connected to {meta}")
+            self.logger.warning("Sanitizing the database")
+            self.sanitize()
+            self.logger.debug("Adding random authors")
+            self.add_random_authors()
+            self.logger.debug("Running sanity checks")
+            self.sanity_checks()
 
-        self.sanitize()
-        self.add_random_authors()
+    def sanity_checks(self):
+        def to_list(dto_objects: list) -> list:
+            return list(map(lambda object: object[0], dto_objects))
+
+        tables = self.select(
+            "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
+        )
+        self.logger.debug(f"Tables in the database: {to_list(tables)}")
+
+        users: list = self.select(
+            "SELECT rolname FROM pg_roles WHERE rolname NOT LIKE 'pg_%'"
+        )
+        self.logger.debug(f"Users in the database: {to_list(users)}")
 
     # Run a SQL query, returning all rows.
-    @log_function_call
     def select(self, query: str) -> list[tuple]:
         cursor = self.db_connection.cursor()
         cursor.execute(query)
+        self.db_connection.commit()
         return cursor.fetchall()
 
     # Run the startup migrations and delete all rows from all tables.
     def sanitize(self) -> None:
         cursor = self.db_connection.cursor()
 
-        with open("migrations/001.sql", "r") as txn:
+        self.logger.debug("Running startup migrations")
+        with open("migration.sql", "r") as txn:
             cursor.execute(txn.read())
+        self.logger.info("Startup migrations finished")
 
         cursor.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
         tables: list = [table[0] for table in cursor.fetchall()]
@@ -70,7 +103,6 @@ class DatabaseConnection:
             cursor.execute(query, (name, surname, middle_name, phone))
         self.db_connection.commit()
 
-    @log_function_call
     def upload_post(
         self, text: str, author_id: int, title: str = "New post", attachment_id=None
     ) -> None:
