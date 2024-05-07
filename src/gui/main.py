@@ -1,54 +1,51 @@
-from connection import DatabaseConnection
-from log import create_named_logger
 from logging import Logger
+
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
-    QComboBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QListWidget,
-    QPushButton,
+    QMainWindow,
     QTabWidget,
     QTextEdit,
     QVBoxLayout,
     QWidget,
 )
 
+# Font, shared between all other modules.
+FONT_FAMILY: str = "IosevkaTerm NF"
+FONT_SIZE: int = 24
+FONT: QFont = QFont(FONT_FAMILY, FONT_SIZE)
 
-class DatabaseGUI(QWidget):
+from database.connection import DatabaseConnection  # noqa: E402
+from gui.tabs.connection import ConnectionTab  # noqa: E402
+from log import create_named_logger  # noqa: E402
+
+
+class DatabaseGUI(QMainWindow):
+    # Internals.
+    db: DatabaseConnection | None = None
+    logger: Logger = create_named_logger("GUI")
+
+    # GUI components.
     __font_family: str = "IosevkaTerm NF"
     __font_size: int = 24
     font: QFont = QFont(__font_family, __font_size)
-    db: DatabaseConnection
-    logger: Logger = create_named_logger("GUI")
+    connection_tab: ConnectionTab
 
     def __init__(self) -> None:
         super().__init__()
-        try:
-            self.db = DatabaseConnection()
-        except Exception as error:
-            self.logger.error("Could not connect to backend")
-            raise Exception(error)
-        else:
-            self.logger.info("Connected to backend")
-            self.init_ui()
-
-    def init_ui(self) -> None:
         self.setWindowTitle("mxxntype's DB Coursework")
         self.setGeometry(600, 800, 800, 600)
 
-        layout = QVBoxLayout()
-        self.tab_widget = QTabWidget()
-        self.tab_widget.addTab(self.create_login_tab(), " Login as author ")
-        self.tab_widget.addTab(self.create_read_tab(), " Read posts ")
-        self.tab_widget.addTab(self.create_compose_tab(), " Compose a post ")
-        self.tab_widget.addTab(self.create_media_tab(), " Browse media ")
-        self.tab_widget.setFont(self.font)
-        layout.addWidget(self.tab_widget)
+        # Create the tabs.
+        self.tabs = QTabWidget()
+        self.tabs.setFont(self.font)
+        self.connection_tab = ConnectionTab(self.logger)
+        self.tabs.addTab(self.connection_tab, "DB Connection")
 
-        self.setLayout(layout)
-        self.show()
+        self.setCentralWidget(self.tabs)
 
     # INFO: A form for authorization (selection of privileges).
     #
@@ -60,8 +57,9 @@ class DatabaseGUI(QWidget):
         self.author_list = QListWidget()
         self.author_list.setFont(self.font)
 
-        authors: list[tuple] = self.db.select("SELECT * FROM authors")
-        list(map(lambda author: self.author_list.addItem(str(author)), authors))
+        if self.db is not None:
+            authors: list[tuple] = self.db.select("SELECT * FROM authors")
+            list(map(lambda author: self.author_list.addItem(str(author)), authors))
 
         layout = QVBoxLayout()
         layout.addWidget(self.author_list)
@@ -80,8 +78,9 @@ class DatabaseGUI(QWidget):
         self.post_list = QListWidget()
         self.post_list.setFont(self.font)
 
-        posts: list[tuple] = self.db.select("SELECT * FROM posts")
-        list(map(lambda post: self.post_list.addItem(str(post)), posts))
+        if self.db is not None:
+            posts: list[tuple] = self.db.select("SELECT * FROM posts")
+            list(map(lambda post: self.post_list.addItem(str(post)), posts))
 
         layout = QVBoxLayout()
         layout.addWidget(self.post_list)
@@ -122,30 +121,31 @@ class DatabaseGUI(QWidget):
             "The text of your post. Let your soul out..."
         )
 
-        authors = self.db.select("SELECT * FROM authors")
-        authors = list(map(lambda author: str(author), authors))
+        # if self.db is not None:
+        #     authors = self.db.select("SELECT * FROM authors")
+        #     authors = list(map(lambda author: str(author), authors))
 
-        author_choice = QComboBox()
-        author_choice.addItems(authors)
-        author_choice.setFont(self.font)
+        #     author_choice = QComboBox()
+        #     author_choice.addItems(authors)
+        #     author_choice.setFont(self.font)
 
-        submit_button = QPushButton("Submit post")
-        submit_button.setFont(self.font)
-        submit_button.clicked.connect(
-            lambda: self.db.upload_post(
-                text=self.compose_text_area.toPlainText(),
-                author_id=eval(author_choice.currentText())[0],
-                title=self.compose_title_line.text(),
-            )
-        )
+        #     submit_button = QPushButton("Submit post")
+        #     submit_button.setFont(self.font)
+        #     submit_button.clicked.connect(
+        #         lambda: self.db.upload_post(
+        #             text=self.compose_text_area.toPlainText(),
+        #             author_id=eval(author_choice.currentText())[0],
+        #             title=self.compose_title_line.text(),
+        #         )
+        #     )
 
-        tab_layout = QVBoxLayout()
-        tab_layout.addLayout(title_layout)
-        tab_layout.addWidget(self.compose_text_area)
-        tab_layout.addWidget(author_choice)
-        tab_layout.addWidget(submit_button)
+        # tab_layout = QVBoxLayout()
+        # tab_layout.addLayout(title_layout)
+        # tab_layout.addWidget(self.compose_text_area)
+        # tab_layout.addWidget(author_choice)
+        # tab_layout.addWidget(submit_button)
         tab = QWidget()
-        tab.setLayout(tab_layout)
+        # tab.setLayout(tab_layout)
         return tab
 
     # INFO: A tab for viewing all the media available in the `attachments` table.

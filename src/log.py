@@ -1,7 +1,7 @@
 import logging
+from logging import Logger
 
 from colorlog import ColoredFormatter
-from logging import Logger
 
 
 def create_named_logger(name: str) -> Logger:

@@ -4,6 +4,7 @@ import string
 from logging import Logger
 
 import psycopg2 as postgresql
+
 from log import create_named_logger
 
 
@@ -15,7 +16,7 @@ class DatabaseConnection:
         self,
         db_name: str = os.environ["DB_NAME"],
         db_user: str = os.environ["DB_USER"],
-        db_passwd: str = os.environ["DB_PASSWORD"],
+        db_pass: str = os.environ["DB_PASSWORD"],
         db_host: str = "localhost",
         db_port: int = 5432,
     ) -> None:
@@ -25,7 +26,7 @@ class DatabaseConnection:
             self.db_connection = postgresql.connect(
                 database=db_name,
                 user=db_user,
-                password=db_passwd,
+                password=db_pass,
                 host=db_host,
                 port=db_port,
             )
