@@ -1,6 +1,6 @@
 -- Create all necessary tables, in case they don't exist already.
 CREATE TABLE IF NOT EXISTS "authors" (
-    "id" serial NOT NULL,
+    "id" SERIAL NOT NULL,
     "name" TEXT,
     "surname" TEXT,
     "middle_name" TEXT,
@@ -9,30 +9,30 @@ CREATE TABLE IF NOT EXISTS "authors" (
 );
 
 CREATE TABLE IF NOT EXISTS "attachments" (
-    "id" serial NOT NULL,
+    "id" SERIAL NOT NULL,
     "description" TEXT,
-    "data" text NOT NULL,
-    "author_id" int,
+    "data" TEXT NOT NULL,
+    "author_id" INT,
     PRIMARY KEY("id"),
     FOREIGN KEY("author_id") REFERENCES "authors"("id") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 
 CREATE TABLE IF NOT EXISTS "posts" (
-    "id" serial NOT NULL,
+    "id" SERIAL NOT NULL,
     "text" TEXT,
     "title" TEXT,
-    "author_id" int,
-    "attachment_id" int,
+    "author_id" INT,
+    "attachment_id" INT,
     PRIMARY KEY("id"),
     FOREIGN KEY("author_id") REFERENCES "authors"("id") ON UPDATE NO ACTION ON DELETE NO ACTION,
     FOREIGN KEY("attachment_id") REFERENCES "attachments"("id") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 
 CREATE TABLE IF NOT EXISTS "ratings" (
-    "id" serial NOT NULL,
-    "post_id" int NOT NULL,
-    "average" smallint,
-    "count" int NOT NULL,
+    "id" SERIAL NOT NULL,
+    "post_id" INT NOT NULL,
+    "average" SMALLINT,
+    "count" INT NOT NULL,
     PRIMARY KEY("id"),
     FOREIGN KEY("post_id") REFERENCES "posts"("id") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
