@@ -18,14 +18,14 @@ FONT_FAMILY: str = "IosevkaTerm NF"
 FONT_SIZE: int = 24
 FONT: QFont = QFont(FONT_FAMILY, FONT_SIZE)
 
-from database.connection import DatabaseConnection  # noqa: E402
+from database.connection import PgDatabase  # noqa: E402
 from gui.tabs.mod import Tabs  # noqa: E402
 from log import create_named_logger  # noqa: E402
 
 
 class DatabaseGUI(QMainWindow):
     # Internals.
-    db: DatabaseConnection | None = None
+    db: PgDatabase | None = None
     logger: Logger = create_named_logger("GUI")
 
     # GUI components.
