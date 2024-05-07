@@ -19,7 +19,7 @@ FONT_SIZE: int = 24
 FONT: QFont = QFont(FONT_FAMILY, FONT_SIZE)
 
 from database.connection import DatabaseConnection  # noqa: E402
-from gui.tabs.connection import ConnectionTab  # noqa: E402
+from gui.tabs.mod import Tabs  # noqa: E402
 from log import create_named_logger  # noqa: E402
 
 
@@ -31,8 +31,9 @@ class DatabaseGUI(QMainWindow):
     # GUI components.
     __font_family: str = "IosevkaTerm NF"
     __font_size: int = 24
-    font: QFont = QFont(__font_family, __font_size)
-    connection_tab: ConnectionTab
+    font: QFont = FONT
+
+    tabs: Tabs
 
     def __init__(self) -> None:
         super().__init__()
@@ -40,12 +41,12 @@ class DatabaseGUI(QMainWindow):
         self.setGeometry(600, 800, 800, 600)
 
         # Create the tabs.
-        self.tabs = QTabWidget()
-        self.tabs.setFont(self.font)
-        self.connection_tab = ConnectionTab(self.logger)
-        self.tabs.addTab(self.connection_tab, "DB Connection")
+        self.tabs = Tabs(self.logger)
+        self.tab_widget = QTabWidget()
+        self.tab_widget.setFont(self.font)
+        self.tab_widget.addTab(self.tabs.connection, "DB Connection")
 
-        self.setCentralWidget(self.tabs)
+        self.setCentralWidget(self.tab_widget)
 
     # INFO: A form for authorization (selection of privileges).
     #
