@@ -19,6 +19,7 @@ pkgs.mkShell {
             qdarkstyle
             python-lsp-server
             colorlog
+            faker
         ]))
     ];
 }

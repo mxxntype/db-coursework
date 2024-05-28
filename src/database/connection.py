@@ -4,12 +4,12 @@ import psycopg2 as postgresql
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from database.credentials import Credentials
-from log import create_named_logger
+from log.main import create_named_logger
 
 
 class PgDatabase(QObject):
     # Internals.
-    logger: Logger = create_named_logger("DB")
+    logger: Logger = create_named_logger("DATABASE")
     db: postgresql.extensions.connection | None = None
 
     # Signals and state.

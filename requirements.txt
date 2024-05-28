@@ -1,0 +1,11 @@
+colorlog==6.8.2
+faker==25.2.0
+packaging==24.0
+psycopg2-binary==2.9.9
+pyqt6==6.7.0
+pyqt6-qt6==6.7.0
+pyqt6-sip==13.6.0
+python-dateutil==2.9.0.post0
+qdarkstyle==3.2.3
+qtpy==2.4.1
+six==1.16.0

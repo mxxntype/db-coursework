@@ -1,9 +1,8 @@
 import sys
 
 import qdarkstyle
-from PyQt6.QtWidgets import QApplication
-
 from gui.main import DatabaseGUI
+from PyQt6.QtWidgets import QApplication
 
 # Program entrypoint.
 if __name__ == "__main__":

@@ -42,10 +42,10 @@ class ConnectionTab(QWidget):
         )
 
         # Create forms for input.
-        (user_layout, self.user_line_edit) = labeled_line_edit("Username")
-        (pass_layout, self.pass_line_edit) = labeled_line_edit("Password")
-        (host_layout, self.host_line_edit) = labeled_line_edit("Hostname")
-        (port_layout, self.port_line_edit) = labeled_line_edit("Port")
+        (user_layout, self.user_line_edit) = labeled_line_edit("Имя пользователя")
+        (pass_layout, self.pass_line_edit) = labeled_line_edit("Пароль")
+        (host_layout, self.host_line_edit) = labeled_line_edit("IP-адрес")
+        (port_layout, self.port_line_edit) = labeled_line_edit("Порт")
 
         # Put the default READER credentials into the forms.
         self.user_line_edit.setText(self.credentials.user)
@@ -65,22 +65,22 @@ class ConnectionTab(QWidget):
             )
 
         # Create a button for attempting an arbitrary connection.
-        attempt_connection_button = QPushButton("Connect with supplied credentials")
+        attempt_connection_button = QPushButton("Подключиться с указанными данными")
         attempt_connection_button.setFont(FONT)
         attempt_connection_button.clicked.connect(
             lambda: self.connect_as(self.form_credentials())
         )
 
         # Create shortcut buttons.
-        shortcut_hint = QLabel("Or log in as:")
+        shortcut_hint = QLabel("Или войдите как")
         shortcut_hint.setFont(FONT)
-        shortcut_reader = QPushButton("Reader")
+        shortcut_reader = QPushButton("Читатель")
         shortcut_reader.clicked.connect(lambda: self.connect_as(READER))
         shortcut_reader.setFont(FONT)
-        shortcut_author = QPushButton("Author")
+        shortcut_author = QPushButton("Автор")
         shortcut_author.clicked.connect(lambda: self.connect_as(AUTHOR))
         shortcut_author.setFont(FONT)
-        shortcut_admin = QPushButton("Admin")
+        shortcut_admin = QPushButton("Администратор")
         shortcut_admin.clicked.connect(lambda: self.connect_as(ADMIN))
         shortcut_admin.setFont(FONT)
         shortcut_buttons = QHBoxLayout()
@@ -90,39 +90,41 @@ class ConnectionTab(QWidget):
         shortcut_buttons.addWidget(shortcut_admin)
 
         # Create a status label and a field for error messages.
-        self.connection_status = QLabel("Status: Not connected")
+        self.connection_status = QLabel("Статус: нет подключения")
         self.connection_status.setFont(FONT)
         self.connection_message = QTextEdit()
         self.connection_message.setFont(FONT)
         self.connection_message.setReadOnly(True)
         self.connection_message.setPlaceholderText(
-            "If an error occurs, you will see it here"
+            "В случае ошибки, она будет отображена здесь"
         )
 
         # Compose everything.
         tab_layout = QVBoxLayout()
-        for layout in [user_layout, pass_layout, host_layout, port_layout]:
+        for layout in [user_layout, pass_layout]:
             tab_layout.addLayout(layout)
         tab_layout.addWidget(attempt_connection_button)
         tab_layout.addLayout(shortcut_buttons)
         tab_layout.addWidget(self.connection_status)
         tab_layout.addWidget(self.connection_message)
+        bottom_layout = QHBoxLayout()
+        bottom_layout.addLayout(host_layout)
+        bottom_layout.addLayout(port_layout)
+        tab_layout.addLayout(bottom_layout)
 
         self.setLayout(tab_layout)
 
     def on_connect_ok(self, meta: str) -> None:
-        self.connection_status.setText(f"Status: connected to {meta}")
+        self.connection_status.setText(f"Статус: подключено ({meta})")
         self.connection_message.clear()
 
     def on_connect_fail(self, error: str) -> None:
-        self.connection_status.setText("Status: not connected")
+        self.connection_status.setText("Статус: нет подключения")
         self.connection_message.setText(error)
 
     def update_credentials(self, credentials: Credentials) -> None:
         # HACK: Each QLineEdit has its `textChanged` bound to updating
         # the internal credentials, so we do not have to touch those.
-        #
-        # NOTE: Also kinda inefficient.
         self.user_line_edit.setText(credentials.user)
         self.pass_line_edit.setText(credentials.passwd)
         self.host_line_edit.setText(credentials.host)
@@ -146,7 +148,7 @@ def labeled_line_edit(label: str) -> tuple[QHBoxLayout, QLineEdit]:
     input_label.setFont(FONT)
     line_edit = QLineEdit()
     line_edit.setFont(FONT)
-    line_edit.setPlaceholderText(f"Database {label.lower()}")
+    line_edit.setPlaceholderText(label.lower())
     layout = QHBoxLayout()
     layout.addWidget(input_label)
     layout.addWidget(line_edit)

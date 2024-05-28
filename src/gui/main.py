@@ -20,7 +20,7 @@ FONT: QFont = QFont(FONT_FAMILY, FONT_SIZE)
 
 from database.connection import PgDatabase  # noqa: E402
 from gui.tabs.mod import Tabs  # noqa: E402
-from log import create_named_logger  # noqa: E402
+from log.main import create_named_logger  # noqa: E402
 
 
 class DatabaseGUI(QMainWindow):
@@ -37,14 +37,19 @@ class DatabaseGUI(QMainWindow):
 
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("mxxntype's DB Coursework")
+        self.setWindowTitle("Вартанян А.А. Курсовая работа")
         self.setGeometry(600, 800, 800, 600)
 
         # Create the tabs.
         self.tabs = Tabs(self.logger)
         self.tab_widget = QTabWidget()
         self.tab_widget.setFont(self.font)
-        self.tab_widget.addTab(self.tabs.connection, "DB Connection")
+        self.tab_widget.addTab(self.tabs.connection, " Подключение к БД ")
+        self.tab_widget.addTab(self.tabs.read, " Читать ")
+
+        self.tabs.connection.connection.on_connect.connect(
+            lambda: self.tabs.read.refresh()
+        )
 
         self.setCentralWidget(self.tab_widget)
 
@@ -59,7 +64,7 @@ class DatabaseGUI(QMainWindow):
         self.author_list.setFont(self.font)
 
         if self.db is not None:
-            authors: list[tuple] = self.db.select("SELECT * FROM authors")
+            authors: list[tuple] = self.db.select("SELECT * FROM authors") or []
             list(map(lambda author: self.author_list.addItem(str(author)), authors))
 
         layout = QVBoxLayout()
@@ -80,7 +85,7 @@ class DatabaseGUI(QMainWindow):
         self.post_list.setFont(self.font)
 
         if self.db is not None:
-            posts: list[tuple] = self.db.select("SELECT * FROM posts")
+            posts: list[tuple] = self.db.select("SELECT * FROM posts") or []
             list(map(lambda post: self.post_list.addItem(str(post)), posts))
 
         layout = QVBoxLayout()
