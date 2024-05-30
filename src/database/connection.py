@@ -42,27 +42,11 @@ class PgDatabase(QObject):
     def on_connect_handler(self, meta: str) -> None:
         self.connected = True
         self.logger.info(f"Successfully connected to {meta}")
-        self.logger.debug("Running sanity checks")
-        self.sanity_checks()
 
     def on_disconnect_handler(self, error: str) -> None:
         self.db = None
         self.connected = True
         self.logger.error(error)
-
-    def sanity_checks(self):
-        def to_list(dto_objects: list) -> list:
-            return list(map(lambda object: object[0], dto_objects))
-
-        tables = self.select(
-            "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
-        )
-        self.logger.debug(f"Tables in the database: {to_list(tables or [])}")
-
-        users = self.select(
-            "SELECT rolname FROM pg_roles WHERE rolname NOT LIKE 'pg_%'"
-        )
-        self.logger.debug(f"Users in the database: {to_list(users or [])}")
 
     # Run a SQL query, returning all rows.
     def select(self, query: str) -> list[tuple] | None:
