@@ -17,7 +17,7 @@ class ReadTab(QWidget):
         self.logger = logger
 
     def refresh(self) -> None:
-        posts = self.connection.select("SELECT * FROM posts") or []
+        posts = self.connection.select("SELECT * FROM posts LIMIT 100") or []
         self.table = QTableWidget()
         self.table.setColumnCount(len(posts[0]))
         self.table.setRowCount(len(posts))

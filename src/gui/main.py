@@ -1,5 +1,6 @@
 from logging import Logger
 
+from database.credentials import READER
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
     QHBoxLayout,
@@ -32,7 +33,6 @@ class DatabaseGUI(QMainWindow):
     __font_family: str = "IosevkaTerm NF"
     __font_size: int = 24
     font: QFont = FONT
-
     tabs: Tabs
 
     def __init__(self) -> None:
@@ -44,12 +44,14 @@ class DatabaseGUI(QMainWindow):
         self.tabs = Tabs(self.logger)
         self.tab_widget = QTabWidget()
         self.tab_widget.setFont(self.font)
-        self.tab_widget.addTab(self.tabs.connection, " Подключение к БД ")
         self.tab_widget.addTab(self.tabs.read, " Читать ")
+        self.tab_widget.addTab(self.tabs.connection, " Подключение к системе ")
 
         self.tabs.connection.connection.on_connect.connect(
             lambda: self.tabs.read.refresh()
         )
+
+        self.tabs.connection.connect_as(credentials=READER)
 
         self.setCentralWidget(self.tab_widget)
 

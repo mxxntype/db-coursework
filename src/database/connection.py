@@ -44,10 +44,6 @@ class PgDatabase(QObject):
         self.logger.info(f"Successfully connected to {meta}")
         self.logger.debug("Running sanity checks")
         self.sanity_checks()
-        # self.logger.warning("Sanitizing the database")
-        # self.sanitize()
-        # self.logger.debug("Adding random authors")
-        # self.add_random_authors()
 
     def on_disconnect_handler(self, error: str) -> None:
         self.db = None
@@ -75,51 +71,3 @@ class PgDatabase(QObject):
             cursor.execute(query)
             self.db.commit()
             return cursor.fetchall()
-
-    # # Run the startup migrations and delete all rows from all tables.
-    # def sanitize(self) -> None:
-    #     cursor = self.db_connection.cursor()
-
-    #     self.logger.debug("Running startup migrations")
-    #     with open("migration.sql", "r") as txn:
-    #         cursor.execute(txn.read())
-    #     self.logger.info("Startup migrations finished")
-
-    #     cursor.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
-    #     tables: list = [table[0] for table in cursor.fetchall()]
-    #     for table in tables:
-    #         cursor.execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;")
-
-    #     self.db_connection.commit()
-
-    # # Append rows with random garbage to the `authors` table.
-    # def add_random_authors(self) -> None:
-    #     cursor = self.db_connection.cursor()
-    #     author_count: int = random.randint(5, 10)
-    #     min: int = 5
-    #     max: int = 15
-    #     for _ in range(author_count):
-    #         name: str = "".join(
-    #             random.choice(string.ascii_letters)
-    #             for _ in range(random.randint(min, max))
-    #         )
-    #         surname: str = "".join(
-    #             random.choice(string.ascii_letters)
-    #             for _ in range(random.randint(min, max))
-    #         )
-    #         middle_name: str = "".join(
-    #             random.choice(string.ascii_letters)
-    #             for _ in range(random.randint(min, max))
-    #         )
-    #         phone: str = "".join(random.choice(string.digits) for _ in range(11))
-    #         query = "INSERT INTO authors (name, surname, middle_name, phone) VALUES (%s, %s, %s, %s)"
-    #         cursor.execute(query, (name, surname, middle_name, phone))
-    #     self.db_connection.commit()
-
-    # def upload_post(
-    #     self, text: str, author_id: int, title: str = "New post", attachment_id=None
-    # ) -> None:
-    #     cursor = self.db_connection.cursor()
-    #     query = "INSERT INTO posts (text, title, author_id, attachment_id) VALUES (%s, %s, %s, %s)"
-    #     cursor.execute(query, (text, title, author_id, attachment_id))
-    #     self.db_connection.commit()
