@@ -12,12 +12,39 @@ from PyQt6.QtWidgets import (
     QTextEdit,
     QVBoxLayout,
     QWidget,
+    QFrame,
 )
 
 # Font, shared between all other modules.
 FONT_FAMILY: str = "IosevkaTerm NF"
 FONT_SIZE: int = 24
 FONT: QFont = QFont(FONT_FAMILY, FONT_SIZE)
+
+# Some colors.
+SUBTEXT = "#99abb8"
+SURFACE = "#60798B"
+
+
+def vertical_separator():
+    separator = QFrame()
+    separator.setFrameShape(QFrame.Shape.VLine)
+    separator.setFrameShadow(QFrame.Shadow.Sunken)
+    return separator
+
+
+def horizontal_separator():
+    separator = QFrame()
+    separator.setFrameShape(QFrame.Shape.HLine)
+    separator.setFrameShadow(QFrame.Shadow.Sunken)
+    return separator
+
+
+def trim_str(string: str, length: int) -> str:
+    if len(string) > length:
+        return f"{string[:length]}..."
+    else:
+        return string
+
 
 from database.connection import PgDatabase  # noqa: E402
 from gui.tabs.mod import Tabs  # noqa: E402
@@ -48,7 +75,7 @@ class DatabaseGUI(QMainWindow):
         self.tab_widget.addTab(self.tabs.connection, " Подключение к системе ")
 
         self.tabs.connection.connection.on_connect.connect(
-            lambda: self.tabs.read.refresh()
+            lambda: self.tabs.read.list_posts()
         )
 
         self.tabs.connection.connect_as(credentials=READER)
