@@ -2,6 +2,7 @@ from logging import Logger
 
 import psycopg2 as postgresql
 from PyQt6.QtCore import QObject, pyqtSignal
+from psycopg2.sql import Composable
 
 from database.credentials import Credentials
 from log.main import create_named_logger
@@ -11,6 +12,7 @@ class PgDatabase(QObject):
     # Internals.
     logger: Logger = create_named_logger("DATABASE")
     db: postgresql.extensions.connection | None = None
+    credentials: Credentials
 
     # Signals and state.
     on_connect = pyqtSignal(str)
@@ -23,6 +25,7 @@ class PgDatabase(QObject):
         self.on_disconnect.connect(self.on_disconnect_handler)
 
     def login(self, credentials: Credentials) -> None:
+        self.credentials = credentials
         try:
             self.logger.info("Attempting to connect to PostgreSQL")
             self.db = postgresql.connect(
@@ -48,10 +51,11 @@ class PgDatabase(QObject):
         self.connected = True
         self.logger.error(error)
 
-    # Run a SQL query, returning all rows.
-    def select(self, query: str) -> list[tuple] | None:
-        if self.db:
+    def select(self, query: str | bytes | Composable, vars) -> list[tuple]:
+        if not self.db:
+            return []
+        else:
             cursor = self.db.cursor()
-            cursor.execute(query)
+            cursor.execute(query, vars)
             self.db.commit()
             return cursor.fetchall()

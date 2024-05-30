@@ -8,7 +8,7 @@ if __name__ == "__main__":
     log.info("Starting author generation")
 
     authors = []
-    for _ in range(20000):
+    for _ in range(2000):
         name = fake.first_name_male()
         surname = fake.last_name_male()
         middle_name = fake.middle_name_male()
@@ -20,6 +20,7 @@ if __name__ == "__main__":
 
     authors = ",\n".join(authors)
     sql: str = f"""
+TRUNCATE TABLE authors RESTART IDENTITY CASCADE;
 INSERT INTO authors(name, surname, middle_name, phone)
 VALUES
 {authors};

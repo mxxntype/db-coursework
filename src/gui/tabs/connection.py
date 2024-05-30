@@ -2,7 +2,7 @@ from logging import Logger
 
 from database.connection import PgDatabase
 from database.credentials import ADMIN, AUTHOR, READER, Credentials
-from gui.main import FONT
+from gui.main import ACCENT, FONT
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QHBoxLayout,
@@ -116,10 +116,16 @@ class ConnectionTab(QWidget):
 
     def on_connect_ok(self, meta: str) -> None:
         self.connection_status.setText(f"Статус: подключено ({meta})")
+        self.connection_status.setStyleSheet(
+            f"background-color: {ACCENT}; color: #000000"
+        )
         self.connection_message.clear()
 
     def on_connect_fail(self, error: str) -> None:
         self.connection_status.setText("Статус: нет подключения")
+        self.connection_status.setStyleSheet(
+            "background-color: IndianRed; color: #000000"
+        )
         self.connection_message.setText(error)
 
     def update_credentials(self, credentials: Credentials) -> None:
