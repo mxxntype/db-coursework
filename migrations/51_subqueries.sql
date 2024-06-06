@@ -20,9 +20,9 @@ $$ LANGUAGE plpgsql;
 -- SELECT * FROM get_posts_with_author_count();
 
 -- A function with a subquery in the `WHERE` clause.
-CREATE OR REPLACE FUNCTION get_posts_by_prolific_authors()
+CREATE OR REPLACE FUNCTION get_posts_by_prolific_authors(min_post_count INTEGER)
 RETURNS TABLE (
-    post_id BIGINT,
+    post_id INTEGER,
     title VARCHAR,
     text TEXT
 ) AS $$
@@ -34,18 +34,18 @@ BEGIN
         p.text
     FROM posts p
     WHERE 
-        p.author_id IN (SELECT id FROM authors WHERE (SELECT COUNT(*) FROM posts WHERE author_id = authors.id) > 5);
+        p.author_id IN (SELECT id FROM authors WHERE (SELECT COUNT(*) FROM posts WHERE author_id = authors.id) > min_post_count);
 END;
 $$ LANGUAGE plpgsql;
 
--- SELECT * FROM get_posts_by_prolific_authors();
+-- SELECT * FROM get_posts_by_prolific_authors(13);
 
 -- A function with a subquery in the `FROM` clause.
 CREATE OR REPLACE FUNCTION get_posts_with_average_ratings()
 RETURNS TABLE (
-    post_id BIGINT,
+    post_id INTEGER,
     title VARCHAR,
-    average_rating FLOAT
+    average_rating NUMERIC
 ) AS $$
 BEGIN
     RETURN QUERY
