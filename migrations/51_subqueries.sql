@@ -1,10 +1,10 @@
 -- A function with a subquery in the `SELECT` clause.
 CREATE OR REPLACE FUNCTION get_posts_with_author_count()
 RETURNS TABLE (
-    post_id BIGINT,
+    post_id INTEGER,
     title VARCHAR,
     text TEXT,
-    author_count INTEGER
+    author_count BIGINT
 ) AS $$
 BEGIN
     RETURN QUERY

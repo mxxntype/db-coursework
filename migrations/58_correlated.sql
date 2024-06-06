@@ -50,10 +50,10 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION get_authors_with_high_rated_posts(threshold SMALLINT)
 RETURNS TABLE(
-    author_id BIGINT,
+    author_id INTEGER,
     name VARCHAR,
     surname VARCHAR,
-    posts_with_high_rating INT
+    posts_with_high_rating BIGINT
 ) AS $$
 BEGIN
     RETURN QUERY
@@ -66,11 +66,6 @@ BEGIN
         authors a
         INNER JOIN posts p ON a.id = p.author_id
     WHERE 
-        EXISTS (
-            SELECT 1
-            FROM attachments att
-            WHERE att.id = p.attachment_id
-        ) AND
         EXISTS (
             SELECT 1
             FROM ratings r
