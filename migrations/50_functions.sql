@@ -26,9 +26,9 @@ AS $$BEGIN
         COUNT(posts.id) AS total_posts,
         COUNT(attachments.id) AS total_attachments,
         CASE
-            WHEN COUNT(posts.id) > 5 OR COUNT(attachments.id) > 3 THEN 'Крайне активный'
-            WHEN COUNT(posts.id) > 2 OR COUNT(attachments.id) > 2 THEN 'Активный'
-            ELSE 'Малоактивный'
+            WHEN COUNT(posts.id) > 5 OR COUNT(attachments.id) > 3 THEN 'Высокий'
+            WHEN COUNT(posts.id) > 2 OR COUNT(attachments.id) > 2 THEN 'Средний'
+            ELSE 'Низкий'
         END AS activity_level
     FROM 
         authors

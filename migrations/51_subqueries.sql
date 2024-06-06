@@ -1,66 +1,67 @@
 -- A function with a subquery in the `SELECT` clause.
-CREATE OR REPLACE FUNCTION top_rated_posts(post_limit INTEGER)
+CREATE OR REPLACE FUNCTION get_posts_with_author_count()
 RETURNS TABLE (
-    id             INTEGER,
-    title          VARCHAR,
-    text           TEXT,
-    created_at     TIMESTAMP,
-    average_rating NUMERIC
+    post_id BIGINT,
+    title VARCHAR,
+    text TEXT,
+    author_count INTEGER
 ) AS $$
 BEGIN
     RETURN QUERY
     SELECT 
-        p.id,
+        p.id AS post_id,
         p.title,
         p.text,
-        p.created_at,
-        (
-			SELECT AVG(r.rate) 
-         	FROM ratings r 
-         	WHERE r.post_id = p.id
-		) AS average_rating
-    FROM posts p ORDER BY average_rating DESC LIMIT post_limit;
+        (SELECT COUNT(*) FROM authors) AS author_count
+    FROM posts p;
 END;
 $$ LANGUAGE plpgsql;
 
-SELECT * FROM top_rated_posts(10);
+-- SELECT * FROM get_posts_with_author_count();
 
 -- A function with a subquery in the `WHERE` clause.
-CREATE OR REPLACE FUNCTION get_posts_by_author_surname(a_surname VARCHAR)
+CREATE OR REPLACE FUNCTION get_posts_by_prolific_authors()
 RETURNS TABLE (
-    id         INTEGER,
-    title      VARCHAR,
-    text       TEXT,
-    created_at TIMESTAMP,
-	author_id  BIGINT
+    post_id BIGINT,
+    title VARCHAR,
+    text TEXT
 ) AS $$
 BEGIN
     RETURN QUERY
     SELECT 
-        p.id,
+        p.id AS post_id,
         p.title,
-        p.text,
-        p.created_at,
-		p.author_id
+        p.text
     FROM posts p
-    WHERE p.author_id IN (SELECT a.id FROM authors a WHERE a.surname = a_surname);
+    WHERE 
+        p.author_id IN (SELECT id FROM authors WHERE (SELECT COUNT(*) FROM posts WHERE author_id = authors.id) > 5);
 END;
 $$ LANGUAGE plpgsql;
 
-SELECT * FROM get_posts_by_author_surname('Иванов');
+-- SELECT * FROM get_posts_by_prolific_authors();
 
 -- A function with a subquery in the `FROM` clause.
-CREATE OR REPLACE FUNCTION count_names_with_phone_like(pattern VARCHAR)
+CREATE OR REPLACE FUNCTION get_posts_with_average_ratings()
 RETURNS TABLE (
-    author_name VARCHAR,
-    phone_count BIGINT
-) AS
-$$BEGIN
+    post_id BIGINT,
+    title VARCHAR,
+    average_rating FLOAT
+) AS $$
+BEGIN
     RETURN QUERY
-    SELECT name, count(*) as phones_starting_with_7
-    FROM (SELECT * FROM authors WHERE phone LIKE pattern)
-    GROUP BY name ORDER BY phones_starting_with_7 DESC;
+    SELECT 
+        sub.post_id,
+        sub.title,
+        sub.average_rating
+    FROM 
+        (SELECT 
+             p.id AS post_id,
+             p.title,
+             COALESCE(AVG(r.rate), 0) AS average_rating
+         FROM posts p
+         LEFT JOIN ratings r ON p.id = r.post_id
+         GROUP BY p.id, p.title) AS sub;
 END;
 $$ LANGUAGE plpgsql;
 
-SELECT * FROM count_names_with_phone_like('+7%');
+-- SELECT * FROM get_posts_with_average_ratings();

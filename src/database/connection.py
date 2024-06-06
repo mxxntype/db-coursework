@@ -59,3 +59,9 @@ class PgDatabase(QObject):
             cursor.execute(query, vars)
             self.db.commit()
             return cursor.fetchall()
+
+    def task_transaction(self) -> None:
+        if self.db:
+            cursor = self.db.cursor()
+            cursor.execute("CALL sanitize_posts_and_authors(2.0, 4.5)")
+            self.db.commit()

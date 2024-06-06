@@ -42,5 +42,5 @@ CREATE TABLE IF NOT EXISTS ratings (
     PRIMARY KEY(id),
     FOREIGN KEY(post_id) REFERENCES posts(id)
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+        ON DELETE CASCADE
 );

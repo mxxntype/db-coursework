@@ -69,6 +69,7 @@ class DatabaseGUI(QMainWindow):
         # Wire up the remaining signals.
         self.tabs.connection.connection.on_connect.connect(self.full_refresh)
         self.tabs.connection.connect_as(credentials=READER)
+        # self.tabs.connection.connection.task_transaction()
 
         # Display the tab widget.
         self.setCentralWidget(self.tab_widget)

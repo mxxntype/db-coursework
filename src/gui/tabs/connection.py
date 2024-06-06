@@ -77,7 +77,7 @@ class ConnectionTab(QWidget):
         shortcut_reader = QPushButton("Читатель")
         shortcut_reader.clicked.connect(lambda: self.connect_as(READER))
         shortcut_reader.setFont(FONT)
-        shortcut_author = QPushButton("Автор")
+        shortcut_author = QPushButton("Редактор")
         shortcut_author.clicked.connect(lambda: self.connect_as(AUTHOR))
         shortcut_author.setFont(FONT)
         shortcut_admin = QPushButton("Администратор")

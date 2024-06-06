@@ -1,7 +1,7 @@
 from logging import Logger
 
 from database.connection import PgDatabase
-from gui.main import FONT, SUBTEXT, vertical_separator
+from gui.main import ACCENT, FONT, SUBTEXT, vertical_separator
 from gui.status import StatusBar
 from PyQt6.QtWidgets import (
     QHBoxLayout,
@@ -21,16 +21,43 @@ class AuthorTab(QWidget):
     scroll_area: QScrollArea
     status_bar: StatusBar
 
+    name_filter: QLineEdit
+    phone_filter: QLineEdit
+
     AUTHOR_LIMIT: int = 50
 
     def __init__(self, connection: PgDatabase, logger: Logger) -> None:
         super().__init__()
         self.connection = connection
         self.logger = logger
+
+        filter_hint = QLabel(" Фильтры ")
+        filter_hint.setFont(FONT)
+        filter_hint.setStyleSheet(f"background-color: {ACCENT}; color: black")
+        name_hint = QLabel("Имя:")
+        name_hint.setFont(FONT)
+        name_hint.setStyleSheet(f"color: {SUBTEXT}")
+        self.name_filter = QLineEdit()
+        self.name_filter.setFont(FONT)
+        self.name_filter.textChanged.connect(self.refresh)
+        phone_hint = QLabel("Номер телефона:")
+        phone_hint.setFont(FONT)
+        phone_hint.setStyleSheet(f"color: {SUBTEXT}")
+        self.phone_filter = QLineEdit()
+        self.phone_filter.setFont(FONT)
+        self.phone_filter.textChanged.connect(self.refresh)
+        filter_layout = QHBoxLayout()
+        filter_layout.addWidget(filter_hint)
+        filter_layout.addWidget(name_hint)
+        filter_layout.addWidget(self.name_filter)
+        filter_layout.addWidget(phone_hint)
+        filter_layout.addWidget(self.phone_filter)
+
         self.scroll_area = QScrollArea()
         self.scroll_area.setFont(FONT)
         self.scroll_area.setWidgetResizable(True)
         self.layout = QVBoxLayout()
+        self.layout.addLayout(filter_layout)
         self.status_bar = StatusBar()
         self.setLayout(self.layout)
 
@@ -49,10 +76,17 @@ class AuthorTab(QWidget):
                     act.activity_level
                 FROM authors a
                 LEFT JOIN get_author_activity() act ON id = act.author_id
+                WHERE
+                    LOWER(a.name || ' ' || a.surname || ' ' || a.middle_name) LIKE '%%' || %s || '%%' AND
+                    a.phone LIKE '%%' || %s || '%%'
                 ORDER BY id DESC
                 LIMIT %s
             """,
-            [self.AUTHOR_LIMIT],
+            [
+                self.name_filter.text(),
+                self.phone_filter.text(),
+                self.AUTHOR_LIMIT,
+            ],
         )
 
         author_list = QVBoxLayout()
@@ -69,6 +103,13 @@ class AuthorTab(QWidget):
                     activity_level=row[7],
                 )
             )
+
+        note = QLabel("Измените критерии поиска для просмотра других авторов.")
+        note.setFont(FONT)
+        note.setStyleSheet(f"color: {ACCENT}")
+        author_list.addWidget(note)
+        author_list.addWidget(QLabel())
+        author_list.setStretch(len(authors) + 1, 1)
 
         __widget = QWidget()
         __widget.setLayout(author_list)

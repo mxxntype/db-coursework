@@ -2,6 +2,7 @@ from logging import Logger
 
 from database.connection import PgDatabase
 from gui.main import (
+    ACCENT,
     FONT,
     FONT_FAMILY,
     FONT_SIZE,
@@ -34,22 +35,59 @@ class ReadTab(QWidget):
     scroll_area: QScrollArea
     status_message: QLabel
 
-    POST_LIMIT: int = 50
+    title_filter: QLineEdit
+    text_filter: QLineEdit
+    author_filter: QLineEdit
+
+    POST_LIMIT: int = 30
 
     def __init__(self, connection: PgDatabase, logger: Logger) -> None:
         super().__init__()
         self.connection = connection
         self.logger = logger
 
-        self.status_message = QLabel("")
-        self.status_message.setFont(FONT)
         self.post_focused.connect(lambda post_id: self.focus_post(post_id))
         self.post_unfocused.connect(lambda: self.list_posts())
+
+        self.filter_hint = QLabel(" Фильтры ")
+        self.filter_hint.setFont(FONT)
+        self.filter_hint.setStyleSheet(f"background-color: {ACCENT}; color: black")
+        self.title_hint = QLabel("Название:")
+        self.title_hint.setFont(FONT)
+        self.title_hint.setStyleSheet(f"color: {SUBTEXT}")
+        self.title_filter = QLineEdit()
+        self.title_filter.setFont(FONT)
+        self.title_filter.textChanged.connect(self.list_posts)
+        self.text_hint = QLabel("Содержание:")
+        self.text_hint.setFont(FONT)
+        self.text_hint.setStyleSheet(f"color: {SUBTEXT}")
+        self.text_filter = QLineEdit()
+        self.text_filter.setFont(FONT)
+        self.text_filter.textChanged.connect(self.list_posts)
+        self.author_hint = QLabel("Автор:")
+        self.author_hint.setFont(FONT)
+        self.author_hint.setStyleSheet(f"color: {SUBTEXT}")
+        self.author_filter = QLineEdit()
+        self.author_filter.setFont(FONT)
+        self.author_filter.textChanged.connect(self.list_posts)
+        filter_layout = QHBoxLayout()
+        filter_layout.addWidget(self.filter_hint)
+        filter_layout.addWidget(self.title_hint)
+        filter_layout.addWidget(self.title_filter)
+        filter_layout.addWidget(self.text_hint)
+        filter_layout.addWidget(self.text_filter)
+        filter_layout.addWidget(self.author_hint)
+        filter_layout.addWidget(self.author_filter)
+
+        self.status_message = QLabel("")
+        self.status_message.setFont(FONT)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setFont(FONT)
         self.scroll_area.setWidgetResizable(True)
+
         self.layout = QVBoxLayout()
+        self.layout.addLayout(filter_layout)
         self.setLayout(self.layout)
 
     def list_posts(self) -> None:
@@ -57,6 +95,13 @@ class ReadTab(QWidget):
         # HACK: Fix segfault after swiching users.
         self.status_message = QLabel("")
         self.status_message.setFont(FONT)
+        self.filter_hint.setHidden(False)
+        self.title_filter.setHidden(False)
+        self.title_hint.setHidden(False)
+        self.text_filter.setHidden(False)
+        self.text_hint.setHidden(False)
+        self.author_filter.setHidden(False)
+        self.author_hint.setHidden(False)
 
         posts: list[tuple] = self.connection.select(
             """
@@ -68,10 +113,19 @@ class ReadTab(QWidget):
                     created_at
                 FROM posts p
                 LEFT JOIN authors a ON p.author_id = a.id
+                WHERE
+                    LOWER(p.title) LIKE '%%' || %s || '%%' AND
+                    LOWER(p.text) LIKE '%%' || %s || '%%' AND
+                    LOWER(a.surname || ' ' || a.name || ' ' || a.middle_name) LIKE '%%' || %s || '%%'
                 ORDER BY id ASC
                 LIMIT %s
             """,
-            [self.POST_LIMIT],
+            [
+                self.title_filter.text().lower(),
+                self.text_filter.text().lower(),
+                self.author_filter.text().lower(),
+                self.POST_LIMIT,
+            ],
         )
 
         post_list = QVBoxLayout()
@@ -86,12 +140,12 @@ class ReadTab(QWidget):
                 )
             )
 
-        note = QLabel(
-            "Для просмотра других публикаций, воспользуйтесь фильтрами или поиском."
-        )
+        note = QLabel("Измените критерии поиска для просмотра других публикаций.")
         note.setFont(FONT)
-        note.setStyleSheet("color: LightSalmon")
+        note.setStyleSheet(f"color: {ACCENT}")
         post_list.addWidget(note)
+        post_list.addWidget(QLabel())
+        post_list.setStretch(len(posts) + 1, 1)
 
         __widget = QWidget()
         __widget.setLayout(post_list)
@@ -193,6 +247,7 @@ class ReadTab(QWidget):
             # Editing field.
             title_edit = QLineEdit()
             title_edit.setFont(QFont(FONT_FAMILY, FONT_SIZE + 2))
+            title_edit.setStyleSheet("font-weight: bold")
             title_edit.setText(row[2])
             text_edit = QTextEdit()
             text_edit.setFont(FONT)
@@ -202,7 +257,7 @@ class ReadTab(QWidget):
 
             # Buttons for saving changes (if allowed) and going back.
             button_layout = QHBoxLayout()
-            if self.connection.credentials.user in ["author", "admin"]:
+            if self.connection.credentials.user in ["editor", "admin"]:
                 title_edit.setReadOnly(False)
                 text_edit.setReadOnly(False)
                 update_button = QPushButton("Сохранить изменения")
@@ -234,6 +289,13 @@ class ReadTab(QWidget):
             layout.addWidget(self.status_message)
             __widget.setLayout(layout)
 
+        self.filter_hint.setHidden(True)
+        self.title_filter.setHidden(True)
+        self.title_hint.setHidden(True)
+        self.text_filter.setHidden(True)
+        self.text_hint.setHidden(True)
+        self.author_filter.setHidden(True)
+        self.author_hint.setHidden(True)
         self.scroll_area.setWidget(__widget)
 
     def update_post(self, post_id: int, new_title: str, new_text: str) -> None:
@@ -244,7 +306,7 @@ class ReadTab(QWidget):
                 cursor = db.cursor()
                 cursor.execute(
                     """
-                        UPDATE post_updates
+                        UPDATE posts
                         SET title = %s, text = %s
                         WHERE id = %s
                     """,
@@ -265,7 +327,7 @@ class ReadTab(QWidget):
 
     def set_warn(self, warn: str):
         self.status_message.setText(warn)
-        self.status_message.setStyleSheet("color: LightSalmon")
+        self.status_message.setStyleSheet(f"color: {ACCENT}")
 
     def set_error(self, error: str):
         self.status_message.setText(error)

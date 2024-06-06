@@ -1,4 +1,3 @@
-
 TRUNCATE TABLE ratings RESTART IDENTITY CASCADE;
 INSERT INTO ratings(post_id, rate, rated_at)
 VALUES
@@ -20001,5 +20000,4 @@ VALUES
 (2926, 5, '1970-04-05 09:16:44'),
 (8829, 2, '1977-02-10 18:38:47'),
 (2485, 2, '2010-08-18 15:39:52'),
-(1104, 1, '1975-06-23 07:48:26');
-    
+(1104, 1, '1975-06-23 07:48:26');   

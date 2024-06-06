@@ -25,7 +25,7 @@ class Credentials:
 
 # Common credentials.
 READER: Credentials = Credentials(user="reader", passwd="12345")
-AUTHOR: Credentials = Credentials(user="author", passwd="12345")
+AUTHOR: Credentials = Credentials(user="editor", passwd="12345")
 
 # Admin credentials.
 __ADMIN_NAME: str = environ.get("DB_USER") or "admin"
