@@ -2,7 +2,7 @@
 CREATE OR REPLACE FUNCTION normalize_phone_number()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.phone := REGEXP_REPLACE(NEW.phone, '[^0-9]', '', 'g'); -- Strip non-numeric characters
+    NEW.phone := REGEXP_REPLACE(NEW.phone, '[^0-9]', '', 'g');
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -15,8 +15,11 @@ EXECUTE FUNCTION normalize_phone_number();
 -- Remove Orphaned Files on `DELETE`.
 CREATE OR REPLACE FUNCTION remove_orphaned_files()
 RETURNS TRIGGER AS $$
+DECLARE
+    file_hash VARCHAR;
 BEGIN
-    PERFORM pg_notify('file_deleted', OLD.data::text);
+    SELECT encode(digest(OLD.data, 'md5'), 'hex') INTO file_hash;
+    PERFORM pg_notify('file_deleted', file_hash);
     RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
@@ -25,6 +28,11 @@ CREATE TRIGGER remove_files_after_delete
 AFTER DELETE ON attachments
 FOR EACH ROW
 EXECUTE FUNCTION remove_orphaned_files();
+
+
+
+
+
 
 -- Set Default Title on `INSERT`
 CREATE OR REPLACE FUNCTION set_default_title()
