@@ -15,8 +15,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- SELECT * FROM get_posts_by_author_phone_numbers(ARRAY['86787060526', '+76750849371']);
-
 CREATE OR REPLACE FUNCTION get_posts_with_high_ratings(min_ratings SMALLINT[])
 RETURNS TABLE (
     post_id INTEGER,
@@ -34,4 +32,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- SELECT * FROM get_posts_by_author_phone_numbers(ARRAY['86787060526', '+76750849371']);
 -- SELECT * FROM get_posts_with_high_ratings(ARRAY[3::smallint, 4::smallint, 5::smallint]);

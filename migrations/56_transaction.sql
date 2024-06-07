@@ -24,7 +24,7 @@ BEGIN
             WHERE id IN (
                 SELECT DISTINCT author_id
                 FROM posts
-                WHERE created_at < NOW() - INTERVAL '1 year'
+                WHERE NOW() - created_at > INTERVAL '54 years'
             );
         
             COMMIT;
