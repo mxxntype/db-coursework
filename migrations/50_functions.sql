@@ -1,4 +1,3 @@
--- A scalar function that counts the posts made by an author.
 CREATE OR REPLACE FUNCTION get_post_count(aid BIGINT) RETURNS BIGINT AS $$
 DECLARE
     result BIGINT;
@@ -8,8 +7,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- A vector function that calculates the total number of posts and attachments
--- per author, categorizing authors based on their activity level.
 CREATE OR REPLACE FUNCTION get_author_activity()
 RETURNS TABLE (
     author_id INT,

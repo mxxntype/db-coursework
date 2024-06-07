@@ -1,4 +1,3 @@
--- Functions for the `authors` table.
 CREATE OR REPLACE FUNCTION
     register_author(p_name VARCHAR, p_surname VARCHAR, p_middle_name VARCHAR, p_phone VARCHAR DEFAULT NULL)
 RETURNS BIGINT AS $$
@@ -28,7 +27,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Functions for the `attachments` table.
 CREATE OR REPLACE FUNCTION create_attachment(p_description VARCHAR, p_data BYTEA, p_author_id BIGINT) RETURNS BIGINT AS $$
 DECLARE
     v_id BIGINT;
@@ -58,7 +56,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Functions for the `posts` table.
 CREATE OR REPLACE FUNCTION
     create_post(p_text TEXT, p_title VARCHAR, p_author_id BIGINT, p_attachment_id BIGINT DEFAULT NULL)
 RETURNS BIGINT AS $$
@@ -91,7 +88,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Functions for the `ratings` table.
 CREATE OR REPLACE FUNCTION rate_post(p_post_id BIGINT, p_rate SMALLINT) RETURNS BIGINT AS $$
 DECLARE
     v_id BIGINT;

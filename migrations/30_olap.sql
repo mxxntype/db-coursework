@@ -1,4 +1,3 @@
--- An OLAP table.
 CREATE TABLE IF NOT EXISTS post_logs (
     id            SERIAL    NOT NULL,
     text          TEXT      NOT NULL,
@@ -18,7 +17,6 @@ CREATE TABLE IF NOT EXISTS post_logs (
         ON DELETE NO ACTION
 );
 
--- A procedure for logging post events in the OLAP table above.
 CREATE OR REPLACE FUNCTION log_post_event() RETURNS TRIGGER AS $$
 BEGIN
     CASE TG_OP
@@ -65,7 +63,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- A OLAP-logging trigger for the `posts` table.
 CREATE TRIGGER log_post_events_trigger
     AFTER INSERT OR UPDATE OR DELETE ON posts
     FOR EACH ROW

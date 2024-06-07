@@ -1,5 +1,3 @@
--- A multi-table query that groups records, uses aggregate functions, includes
--- a parameter in the HAVING clause to view the average rating of each post.
 CREATE OR REPLACE FUNCTION posts_with_avg_rate_above(min_avg_rating NUMERIC)
 RETURNS TABLE (
     author_id BIGINT,

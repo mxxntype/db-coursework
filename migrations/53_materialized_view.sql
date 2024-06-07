@@ -1,4 +1,3 @@
--- Create a materialized view for getting authors' activity scores.
 CREATE MATERIALIZED VIEW author_activity_score AS
 SELECT 
     authors.id AS author_id,

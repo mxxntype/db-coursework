@@ -1,4 +1,3 @@
--- A view with `INSERT`, `UPDATE` and `DELETE` capabilities.
 CREATE VIEW post_details AS
 SELECT
     p.id AS post_id,
@@ -17,7 +16,6 @@ FROM
 GROUP BY
     p.id, p.title, p.text, p.author_id, a.name, a.surname, a.middle_name, p.attachment_id;
 
--- `INSERT` handling.
 CREATE OR REPLACE FUNCTION insert_post_details()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -33,7 +31,6 @@ INSTEAD OF INSERT ON post_details
 FOR EACH ROW
 EXECUTE FUNCTION insert_post_details();
 
--- `UPDATE` handling.
 CREATE OR REPLACE FUNCTION update_post_details()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -49,7 +46,6 @@ INSTEAD OF UPDATE ON post_details
 FOR EACH ROW
 EXECUTE FUNCTION update_post_details();
 
--- `DELETE` handling.
 CREATE OR REPLACE FUNCTION delete_post_details()
 RETURNS TRIGGER AS $$
 BEGIN

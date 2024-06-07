@@ -1,4 +1,3 @@
--- Normalize Phone Numbers on `UPDATE`.
 CREATE OR REPLACE FUNCTION normalize_phone_number()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -12,7 +11,6 @@ BEFORE UPDATE ON authors
 FOR EACH ROW
 EXECUTE FUNCTION normalize_phone_number();
 
--- Remove Orphaned Files on `DELETE`.
 CREATE OR REPLACE FUNCTION remove_orphaned_files()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -29,12 +27,6 @@ AFTER DELETE ON attachments
 FOR EACH ROW
 EXECUTE FUNCTION remove_orphaned_files();
 
-
-
-
-
-
--- Set Default Title on `INSERT`
 CREATE OR REPLACE FUNCTION set_default_title()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -50,7 +42,6 @@ BEFORE INSERT ON posts
 FOR EACH ROW
 EXECUTE FUNCTION set_default_title();
 
--- Validate Rating on `INSERT`
 CREATE OR REPLACE FUNCTION validate_rating()
 RETURNS TRIGGER AS $$
 BEGIN

@@ -1,4 +1,3 @@
--- A function with a subquery in the `SELECT` clause.
 CREATE OR REPLACE FUNCTION get_posts_with_author_count()
 RETURNS TABLE (
     post_id INTEGER,
@@ -17,9 +16,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- SELECT * FROM get_posts_with_author_count();
-
--- A function with a subquery in the `WHERE` clause.
 CREATE OR REPLACE FUNCTION get_posts_by_prolific_authors(min_post_count INTEGER)
 RETURNS TABLE (
     post_id INTEGER,
@@ -38,9 +34,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- SELECT * FROM get_posts_by_prolific_authors(13);
-
--- A function with a subquery in the `FROM` clause.
 CREATE OR REPLACE FUNCTION get_posts_with_average_ratings()
 RETURNS TABLE (
     post_id INTEGER,
@@ -64,4 +57,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- SELECT * FROM get_posts_with_author_count();
+-- SELECT * FROM get_posts_by_prolific_authors(13);
 -- SELECT * FROM get_posts_with_average_ratings();
