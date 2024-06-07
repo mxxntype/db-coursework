@@ -21,6 +21,7 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QScrollArea,
+    QSpinBox,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -273,7 +274,7 @@ class ReadTab(QWidget):
                     )
                 )
                 author_filter.textChanged.emit("")
-                update_button = QPushButton("Сохранить изменения")
+                update_button = QPushButton(" Сохранить изменения ")
                 update_button.setFont(FONT)
                 update_button.clicked.connect(
                     lambda: self.update_post(
@@ -292,15 +293,37 @@ class ReadTab(QWidget):
                 )
 
             # A button for going back to the post list.
-            unfocus_button = QPushButton("Вернуться к списку публикаций")
+            unfocus_button = QPushButton(" Вернуться к списку публикаций ")
             unfocus_button.setFont(FONT)
             unfocus_button.clicked.connect(lambda: self.post_unfocused.emit())
             button_layout.addWidget(unfocus_button)
+
+            rate_label = QLabel("Оцените публикацию:")
+            rate_label.setFont(FONT)
+            rate_edit = QSpinBox()
+            rate_edit.setFont(FONT)
+            rate_edit.setRange(1, 5)
+            rate_label.setStyleSheet(f"color: {SUBTEXT}")
+            rate_button = QPushButton(" Оценить публикацию ")
+            rate_button.setFont(FONT)
+            if self.connection.db:
+                with self.connection.db.cursor() as cursor:
+                    rate_button.clicked.connect(
+                        lambda: cursor.execute(
+                            "SELECT rate_post(%s, %s::smallint)",
+                            [post_id, rate_edit.text()],
+                        )
+                    )
+            rate_layout = QHBoxLayout()
+            rate_layout.addWidget(rate_label)
+            rate_layout.addWidget(rate_edit)
+            rate_layout.addWidget(rate_button)
 
             # Compose everything.
             layout = QVBoxLayout()
             layout.addWidget(title_edit)
             layout.addWidget(text_edit)
+            layout.addLayout(rate_layout)
             layout.addLayout(button_layout)
             layout.addWidget(self.status_message)
             __widget.setLayout(layout)
