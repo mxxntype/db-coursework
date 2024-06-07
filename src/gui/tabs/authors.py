@@ -90,6 +90,17 @@ class AuthorTab(QWidget):
         )
 
         author_list = QVBoxLayout()
+        __layout = QVBoxLayout()
+
+        if self.connection.credentials.user == "admin":
+            add_author_button = QPushButton(" Добавить автора ")
+            add_author_button.setFont(FONT)
+            add_author_button.setStyleSheet(
+                f"QPushButton {{ background-color: {ACCENT}; color: black }} QPushButton:hover {{ background-color: #53afee }}"
+            )
+            add_author_button.clicked.connect(self.add_author)
+            __layout.addWidget(add_author_button)
+
         for row in authors:
             author_list.addLayout(
                 self.render_author(
@@ -112,7 +123,8 @@ class AuthorTab(QWidget):
         author_list.setStretch(len(authors) + 1, 1)
 
         __widget = QWidget()
-        __widget.setLayout(author_list)
+        __layout.addLayout(author_list)
+        __widget.setLayout(__layout)
 
         self.scroll_area.setWidget(__widget)
         self.layout.addWidget(self.scroll_area)
@@ -141,6 +153,7 @@ class AuthorTab(QWidget):
             line_edit.setFont(FONT)
             line_edit.setReadOnly(read_only)
             line_edit.setText(initial_text)
+            line_edit.setPlaceholderText("...")
             _label = QLabel(label)
             _label.setFont(FONT)
             _label.setStyleSheet(f"color: {SUBTEXT}")
@@ -215,6 +228,20 @@ class AuthorTab(QWidget):
 
         return container
 
+    def add_author(self) -> None:
+        if self.connection.db:
+            with self.connection.db.cursor() as cursor:
+                cursor.execute(
+                    """
+                        INSERT INTO authors(name, surname, middle_name, phone)
+                        VALUES ('', '', '', '')
+                    """,
+                    [],
+                )
+            self.name_filter.clear()
+            self.phone_filter.clear()
+            self.refresh()
+
     # Update an author's data in the database.
     def update_author(
         self,
@@ -224,20 +251,19 @@ class AuthorTab(QWidget):
         new_middle_name: str,
         new_phone: str,
     ) -> None:
-        db = self.connection.db
-        if db:
+        if self.connection.db:
             try:
-                cursor = db.cursor()
-                cursor.execute(
-                    """
-                       UPDATE authors
-                       SET name = %s, surname = %s, middle_name = %s, phone = %s
-                       WHERE id = %s
-                   """,
-                    [new_name, new_surname, new_middle_name, new_phone, id],
-                )
-                db.commit()
-                self.status_bar.set_ok("Данные автора обновлены.")
+                with self.connection.db.cursor() as cursor:
+                    cursor.execute(
+                        """
+                           UPDATE authors
+                           SET name = %s, surname = %s, middle_name = %s, phone = %s
+                           WHERE id = %s
+                       """,
+                        [new_name, new_surname, new_middle_name, new_phone, id],
+                    )
+                    self.refresh()
+                    self.status_bar.set_ok("Данные автора обновлены.")
             except Exception as error:
                 self.logger.error(error)
                 self.status_bar.set_error(

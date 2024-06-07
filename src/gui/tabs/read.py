@@ -306,18 +306,26 @@ class ReadTab(QWidget):
             rate_label.setStyleSheet(f"color: {SUBTEXT}")
             rate_button = QPushButton(" Оценить публикацию ")
             rate_button.setFont(FONT)
-            if self.connection.db:
-                with self.connection.db.cursor() as cursor:
-                    rate_button.clicked.connect(
-                        lambda: cursor.execute(
-                            "SELECT rate_post(%s, %s::smallint)",
-                            [post_id, rate_edit.text()],
-                        )
-                    )
+            avg_rate = QLabel(str(self.fetch_avg_rate(post_id)))
+            avg_rate.setFont(FONT)
+            avg_rate.setStyleSheet(f"background-color: {ACCENT}; color: black")
+            avg_rate_hint = QLabel("Средний рейтинг публикации:")
+            avg_rate_hint.setFont(FONT)
+            avg_rate_hint.setStyleSheet(f"color: {SUBTEXT}")
+
+            rate_button.clicked.connect(
+                lambda: avg_rate.setText(
+                    str(self.rate_post(post_id, int(rate_edit.text())) or 0.0)
+                )
+            )
             rate_layout = QHBoxLayout()
             rate_layout.addWidget(rate_label)
             rate_layout.addWidget(rate_edit)
             rate_layout.addWidget(rate_button)
+            rate_layout.addWidget(QLabel(""))  # Padding.
+            rate_layout.addWidget(avg_rate_hint)
+            rate_layout.addWidget(avg_rate)
+            rate_layout.setStretch(3, 1)
 
             # Compose everything.
             layout = QVBoxLayout()
@@ -336,6 +344,32 @@ class ReadTab(QWidget):
         self.author_filter.setHidden(True)
         self.author_hint.setHidden(True)
         self.scroll_area.setWidget(__widget)
+
+    def fetch_avg_rate(self, post_id: int) -> float | None:
+        if self.connection.db:
+            with self.connection.db.cursor() as cursor:
+                cursor.execute(
+                    """
+                        SELECT AVG(rate)
+                        FROM ratings
+                        WHERE post_id = %s
+                        GROUP BY post_id
+                    """,
+                    [post_id],
+                )
+                rates: list[tuple] = cursor.fetchall() or [(0.0,)]
+                return round(rates[0][0], 1)
+
+    def rate_post(self, id: int, rate: int) -> float | None:
+        if self.connection.db:
+            with self.connection.db.cursor() as cursor:
+                cursor.execute(
+                    """
+                        SELECT rate_post(%s, %s::smallint)
+                    """,
+                    [id, rate],
+                )
+                return self.fetch_avg_rate(id)
 
     def update_post(
         self,
