@@ -1,11 +1,10 @@
 from logging import Logger
 
 import psycopg2 as postgresql
-from PyQt6.QtCore import QObject, pyqtSignal
-from psycopg2.sql import Composable
-
 from database.credentials import Credentials
 from log.main import create_named_logger
+from psycopg2.sql import Composable
+from PyQt6.QtCore import QObject, pyqtSignal
 
 
 class PgDatabase(QObject):
@@ -35,6 +34,7 @@ class PgDatabase(QObject):
                 host=credentials.host,
                 port=credentials.port,
             )
+            self.db.set_session(autocommit=True)
             self.on_connect.emit(
                 f"{credentials.user}@{credentials.host}:{credentials.port}"
             )
@@ -55,13 +55,91 @@ class PgDatabase(QObject):
         if not self.db:
             return []
         else:
-            cursor = self.db.cursor()
-            cursor.execute(query, vars)
-            self.db.commit()
-            return cursor.fetchall()
+            with self.db.cursor() as cursor:
+                cursor.execute(query, vars)
+                return cursor.fetchall()
 
+    # Составной многотабличный запрос с CASE-выражением.
+    def task_case(self) -> None:
+        if self.db:
+            with self.db.cursor() as cursor:
+                cursor.execute("SELECT * FROM get_author_activity()")
+        else:
+            self.logger.warn("Not connected to DB, skipping request")
+
+    # Многотабличный VIEW, с возможностью его обновления (использовать триггеры или правила).
+    def task_view(self) -> None:
+        if self.db:
+            with self.db.cursor() as cursor:
+                cursor.execute("SELECT * FROM post_details")
+        else:
+            self.logger.warn("Not connected to DB, skipping request")
+
+    # Материализованное представление.
+    def task_materialized_view(self) -> None:
+        if self.db:
+            with self.db.cursor() as cursor:
+                cursor.execute(
+                    """
+                       REFRESH MATERIALIZED VIEW author_activity_score;
+                       SELECT * FROM author_activity_score;
+                    """
+                )
+        else:
+            self.logger.warn("Not connected to DB, skipping request")
+
+    # Запросы, содержащие подзапрос в разделах SELECT, FROM и WHERE (в каждом хотя бы по одному).
+    def task_subquery_select(self) -> None:
+        if self.db:
+            with self.db.cursor() as cursor:
+                cursor.execute("SELECT * FROM get_posts_with_author_count()")
+        else:
+            self.logger.warn("Not connected to DB, skipping request")
+
+    # Запросы, содержащие подзапрос в разделах SELECT, FROM и WHERE (в каждом хотя бы по одному).
+    def task_subquery_where(self) -> None:
+        if self.db:
+            with self.db.cursor() as cursor:
+                cursor.execute("SELECT * FROM get_posts_by_prolific_authors(13)")
+        else:
+            self.logger.warn("Not connected to DB, skipping request")
+
+    # Запросы, содержащие подзапрос в разделах SELECT, FROM и WHERE (в каждом хотя бы по одному).
+    def task_subquery_from(self) -> None:
+        if self.db:
+            with self.db.cursor() as cursor:
+                cursor.execute("SELECT * FROM get_posts_with_average_ratings()")
+        else:
+            self.logger.warn("Not connected to DB, skipping request")
+
+    def task_correlated_1(self) -> None:
+        if self.db:
+            with self.db.cursor() as cursor:
+                cursor.execute("SELECT * FROM get_latest_rating_for_each_post()")
+        else:
+            self.logger.warn("Not connected to DB, skipping request")
+
+    def task_correlated_2(self) -> None:
+        if self.db:
+            with self.db.cursor() as cursor:
+                cursor.execute("SELECT * FROM get_highest_rated_post_per_author()")
+        else:
+            self.logger.warn("Not connected to DB, skipping request")
+
+    def task_correlated_3(self) -> None:
+        if self.db:
+            with self.db.cursor() as cursor:
+                cursor.execute(
+                    "SELECT * FROM get_authors_with_high_rated_posts(4::smallint)"
+                )
+        else:
+            self.logger.warn("Not connected to DB, skipping request")
+
+    # Реализовать отдельную хранимую процедуру, состоящую из нескольких отдельных операций в виде
+    # единой транзакции, которая при определенных условиях может быть зафиксирована или откатана.
     def task_transaction(self) -> None:
         if self.db:
-            cursor = self.db.cursor()
-            cursor.execute("CALL sanitize_posts_and_authors(2.0, 4.5)")
-            self.db.commit()
+            with self.db.cursor() as cursor:
+                cursor.execute("CALL sanitize_posts_and_authors(2.0, 4.5)")
+        else:
+            self.logger.warn("Not connected to DB, skipping request")

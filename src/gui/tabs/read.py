@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from logging import Logger
 
 from database.connection import PgDatabase
@@ -14,6 +15,7 @@ from gui.main import (
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
+    QComboBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -162,7 +164,7 @@ class ReadTab(QWidget):
         timestamp_str: str,
     ) -> QVBoxLayout:
         # The post's title, author and timestamp.
-        title = QLabel(f"<b>{trim_str(title_str, 80)}</b>")
+        title = QLabel(f"<b>{trim_str(title_str, 60)}</b>")
         title.setFont(QFont(FONT_FAMILY, FONT_SIZE + 4))
         author_hint = QLabel("Автор:")
         author_hint.setFont(FONT)
@@ -241,7 +243,6 @@ class ReadTab(QWidget):
                 """,
                 [post_id],
             )
-            db.commit()
             row: tuple = cursor.fetchall()[0]
 
             # Editing field.
@@ -260,6 +261,18 @@ class ReadTab(QWidget):
             if self.connection.credentials.user in ["editor", "admin"]:
                 title_edit.setReadOnly(False)
                 text_edit.setReadOnly(False)
+                author_combobox = QComboBox()
+                author_combobox.setFont(FONT)
+                author_filter = QLineEdit()
+                author_filter.setFont(FONT)
+                author_filter.setPlaceholderText("Фильтр")
+                author_filter.textChanged.connect(lambda: author_combobox.clear())
+                author_filter.textChanged.connect(
+                    lambda: author_combobox.addItems(
+                        self.load_authors(author_filter.text()) or []
+                    )
+                )
+                author_filter.textChanged.emit("")
                 update_button = QPushButton("Сохранить изменения")
                 update_button.setFont(FONT)
                 update_button.clicked.connect(
@@ -267,8 +280,11 @@ class ReadTab(QWidget):
                         post_id=int(row[0]),
                         new_title=title_edit.text(),
                         new_text=text_edit.toPlainText(),
+                        new_author=author_combobox.currentText(),
                     )
                 )
+                button_layout.addWidget(author_filter)
+                button_layout.addWidget(author_combobox)
                 button_layout.addWidget(update_button)
             else:
                 self.set_warn(
@@ -298,7 +314,13 @@ class ReadTab(QWidget):
         self.author_hint.setHidden(True)
         self.scroll_area.setWidget(__widget)
 
-    def update_post(self, post_id: int, new_title: str, new_text: str) -> None:
+    def update_post(
+        self,
+        post_id: int,
+        new_title: str,
+        new_text: str,
+        new_author: str,
+    ) -> None:
         self.logger.info(f"Updating post #{post_id}")
         db = self.connection.db
         if db:
@@ -307,10 +329,18 @@ class ReadTab(QWidget):
                 cursor.execute(
                     """
                         UPDATE posts
-                        SET title = %s, text = %s
+                        SET
+                            title = %s,
+                            text = %s,
+                            author_id = (
+                                SELECT MIN(id) FROM authors
+                                WHERE
+                                    (surname || ' ' || name || ' ' || middle_name || ', ' || phone) LIKE '%%' || %s || '%%'
+                                GROUP BY id
+                            )
                         WHERE id = %s
                     """,
-                    [new_title, new_text, post_id],
+                    [new_title, new_text, new_author, post_id],
                 )
                 db.commit()
                 self.set_info("Изменения сохранены.")
@@ -319,6 +349,17 @@ class ReadTab(QWidget):
                 self.set_error(
                     "Недостаточно разрешений для редактирования публикации! Войдите как автор или администратор."
                 )
+
+    def load_authors(self, filter: str) -> Iterable[str] | None:
+        rows: list[tuple] = self.connection.select(
+            """
+                SELECT * FROM authors
+                WHERE
+                    (surname || ' ' || name || ' ' || middle_name || ', ' || phone) LIKE '%%' || %s || '%%'
+            """,
+            [filter],
+        )
+        return list(map(lambda row: f"{row[2]} {row[1]} {row[3]}, {row[4]}", rows))
 
     def set_info(self, info: str):
         self.status_message.setText(info)

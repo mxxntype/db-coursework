@@ -3,9 +3,9 @@ from logging import Logger
 from database.credentials import READER
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
+    QFrame,
     QMainWindow,
     QTabWidget,
-    QFrame,
 )
 
 # Font, shared between all other modules.
@@ -54,16 +54,19 @@ class DatabaseGUI(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("Вартанян А.А. Курсовая работа")
-        self.setGeometry(600, 800, 800, 600)
+        self.setGeometry(900, 1600, 1600, 900)
 
         # Create the tabs.
         self.tabs = Tabs(self.logger)
         self.tab_widget = QTabWidget()
         self.tab_widget.setFont(self.font)
+        self.tab_widget.setStyleSheet("QTabWidget {font-weight: bold}")
 
         # Load the tabs.
-        self.tab_widget.addTab(self.tabs.read, " Список публикаций ")
-        self.tab_widget.addTab(self.tabs.author, " Список авторов ")
+        self.tab_widget.addTab(self.tabs.read, " Публикации ")
+        self.tab_widget.addTab(self.tabs.author, " Авторы ")
+        self.tab_widget.addTab(self.tabs.author, " Авторы ")
+        self.tab_widget.addTab(self.tabs.maintenance, " Система обеспечения ")
         self.tab_widget.addTab(self.tabs.connection, " Подключение к системе ")
 
         # Wire up the remaining signals.

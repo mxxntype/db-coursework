@@ -15,7 +15,7 @@ BEGIN
         
         IF rec.average_rate >= threshold THEN
             UPDATE posts
-            SET title = '(Highly rated) ' || title
+            SET title = '<i>[TOP]</i> ' || title
             WHERE id = rec.id;
         END IF;
     END LOOP;

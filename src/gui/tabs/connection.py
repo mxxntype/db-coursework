@@ -1,5 +1,4 @@
 from logging import Logger
-
 from database.connection import PgDatabase
 from database.credentials import ADMIN, AUTHOR, READER, Credentials
 from gui.main import ACCENT, FONT

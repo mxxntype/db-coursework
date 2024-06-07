@@ -1,9 +1,9 @@
 from gui.main import FONT, SURFACE
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import (
+    QHBoxLayout,
     QLabel,
     QLineEdit,
-    QHBoxLayout,
     QWidget,
 )
 
@@ -34,20 +34,27 @@ class StatusBar(QWidget):
         self.status.setStyleSheet(f"background-color: {SURFACE}; color: black")
         self.message.setText("")
 
+    def set_info(self, message: str) -> None:
+        self.status.setStyleSheet(f"background-color: {SURFACE}; color: black")
+        self.status.setText("WORKING")
+        self.message.setText(message)
+
     def set_ok(self, message: str) -> None:
         self.status.setStyleSheet("background-color: LightGreen; color: black")
         self.status.setText("   OK  ")
         self.message.setText(message)
         QTimer.singleShot(self.RESET_DELAY_MS, lambda: self.set_idle())
 
-    def set_warn(self, message: str) -> None:
+    def set_warn(self, message: str, transient: bool = True) -> None:
         self.status.setText("  WARN ")
         self.status.setStyleSheet("background-color: LightSalmon; color: black")
         self.message.setText(message)
-        QTimer.singleShot(self.RESET_DELAY_MS, lambda: self.set_idle())
+        if transient:
+            QTimer.singleShot(self.RESET_DELAY_MS, lambda: self.set_idle())
 
-    def set_error(self, message: str) -> None:
+    def set_error(self, message: str, transient: bool = True) -> None:
         self.status.setText(" ERROR ")
         self.status.setStyleSheet("background-color: IndianRed; color: black")
         self.message.setText(message)
-        QTimer.singleShot(self.RESET_DELAY_MS, lambda: self.set_idle())
+        if transient:
+            QTimer.singleShot(self.RESET_DELAY_MS, lambda: self.set_idle())
