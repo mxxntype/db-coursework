@@ -637,7 +637,7 @@ CREATE FUNCTION public.set_default_title() RETURNS trigger
     AS $$
 BEGIN
     IF NEW.title IS NULL OR NEW.title = '' THEN
-        NEW.title := 'Untitled Post';
+        NEW.title := 'Публикация без названия';
     END IF;
     RETURN NEW;
 END;
@@ -944,10 +944,10 @@ ALTER VIEW public.post_details OWNER TO admin;
 
 CREATE TABLE public.post_logs (
     id integer NOT NULL,
-    text text NOT NULL,
-    title character varying NOT NULL,
-    author_id bigint NOT NULL,
-    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    text text,
+    title character varying,
+    author_id bigint,
+    created_at timestamp without time zone DEFAULT now(),
     attachment_id bigint,
     event_type character varying(10) NOT NULL,
     event_time timestamp without time zone DEFAULT now(),
@@ -1180,23 +1180,7 @@ CREATE TRIGGER validate_rating_before_insert BEFORE INSERT ON public.ratings FOR
 --
 
 ALTER TABLE ONLY public.attachments
-    ADD CONSTRAINT attachments_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.authors(id);
-
-
---
--- Name: post_logs post_logs_attachment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.post_logs
-    ADD CONSTRAINT post_logs_attachment_id_fkey FOREIGN KEY (attachment_id) REFERENCES public.attachments(id);
-
-
---
--- Name: post_logs post_logs_author_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.post_logs
-    ADD CONSTRAINT post_logs_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.authors(id);
+    ADD CONSTRAINT attachments_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.authors(id) ON DELETE CASCADE;
 
 
 --
@@ -1212,7 +1196,7 @@ ALTER TABLE ONLY public.posts
 --
 
 ALTER TABLE ONLY public.posts
-    ADD CONSTRAINT posts_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.authors(id);
+    ADD CONSTRAINT posts_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.authors(id) ON DELETE CASCADE;
 
 
 --
@@ -1322,3 +1306,4 @@ GRANT SELECT,USAGE ON SEQUENCE public.ratings_id_seq TO editor;
 --
 -- PostgreSQL database dump complete
 --
+
