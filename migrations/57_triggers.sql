@@ -31,7 +31,7 @@ CREATE OR REPLACE FUNCTION set_default_title()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.title IS NULL OR NEW.title = '' THEN
-        NEW.title := 'Untitled Post';
+        NEW.title := 'Публикация без названия';
     END IF;
     RETURN NEW;
 END;

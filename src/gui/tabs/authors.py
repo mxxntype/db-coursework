@@ -1,7 +1,7 @@
 from logging import Logger
 
 from database.connection import PgDatabase
-from gui.main import ACCENT, FONT, SUBTEXT, vertical_separator
+from gui.main import ACCENT, FONT, SUBTEXT, horizontal_separator, vertical_separator
 from gui.status import StatusBar
 from PyQt6.QtWidgets import (
     QHBoxLayout,
@@ -96,10 +96,19 @@ class AuthorTab(QWidget):
             add_author_button = QPushButton(" Добавить автора ")
             add_author_button.setFont(FONT)
             add_author_button.setStyleSheet(
-                f"QPushButton {{ background-color: {ACCENT}; color: black }} QPushButton:hover {{ background-color: #53afee }}"
+                f"""
+                    QPushButton {{
+                        background-color: {ACCENT};
+                        color: black
+                    }}
+                    QPushButton:hover {{
+                        background-color: #53afee
+                    }}
+                """
             )
             add_author_button.clicked.connect(self.add_author)
             __layout.addWidget(add_author_button)
+            __layout.addWidget(horizontal_separator())
 
         for row in authors:
             author_list.addLayout(
@@ -207,7 +216,9 @@ class AuthorTab(QWidget):
             activity_layout.addWidget(vertical_separator())
         if attachment_count is not None:
             mkStat(activity_layout, str(attachment_count), "Количество вложений")
-            activity_layout.setStretch(7, 1)
+
+        activity_layout.addWidget(QLabel(""))
+        activity_layout.setStretch(activity_layout.count() - 1, 1)
 
         # Add a `save` button if we can actually update anything.
         if has_update_permissions:
@@ -223,6 +234,22 @@ class AuthorTab(QWidget):
                 )
             )
             container.addWidget(save_button)
+            delete_button = QPushButton(" Удалить ")
+            delete_button.setFont(FONT)
+            delete_button.setStyleSheet(
+                """
+                    QPushButton {
+                        background-color: IndianRed;
+                        color: black
+                    }
+                    QPushButton:hover {
+                        background-color: #d98383;
+                    }
+                """
+            )
+            delete_button.clicked.connect(lambda: self.delete_author(author_id=id))
+            activity_layout.addWidget(delete_button)
+
         container.addWidget(QLabel(""))  # Spacer.
         container.addWidget(QLabel(""))  # Spacer.
 
@@ -240,9 +267,15 @@ class AuthorTab(QWidget):
                 )
             self.name_filter.clear()
             self.phone_filter.clear()
+            self.status_bar.set_ok("Автор создан!")
             self.refresh()
 
-    # Update an author's data in the database.
+    def delete_author(self, author_id: int) -> None:
+        if self.connection.db:
+            with self.connection.db.cursor() as cursor:
+                cursor.execute("DELETE FROM authors WHERE id = %s", [author_id])
+                self.refresh()
+
     def update_author(
         self,
         id: int,

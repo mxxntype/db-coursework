@@ -1,7 +1,8 @@
 from logging import Logger
+
 from database.connection import PgDatabase
 from database.credentials import ADMIN, AUTHOR, READER, Credentials
-from gui.main import ACCENT, FONT
+from gui.main import ACCENT, FONT, SUBTEXT
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QHBoxLayout,
@@ -45,6 +46,8 @@ class ConnectionTab(QWidget):
         (pass_layout, self.pass_line_edit) = labeled_line_edit("Пароль")
         (host_layout, self.host_line_edit) = labeled_line_edit("IP-адрес")
         (port_layout, self.port_line_edit) = labeled_line_edit("Порт")
+        self.user_line_edit.setStyleSheet("font-weight: bold")
+        self.pass_line_edit.setEchoMode(QLineEdit.EchoMode.Password)
 
         # Put the default READER credentials into the forms.
         self.user_line_edit.setText(self.credentials.user)
@@ -71,8 +74,9 @@ class ConnectionTab(QWidget):
         )
 
         # Create shortcut buttons.
-        shortcut_hint = QLabel("Или войдите как")
+        shortcut_hint = QLabel("Или войдите как:")
         shortcut_hint.setFont(FONT)
+        shortcut_hint.setStyleSheet(f"color: {SUBTEXT}")
         shortcut_reader = QPushButton("Читатель")
         shortcut_reader.clicked.connect(lambda: self.connect_as(READER))
         shortcut_reader.setFont(FONT)
@@ -87,6 +91,9 @@ class ConnectionTab(QWidget):
         shortcut_buttons.addWidget(shortcut_reader)
         shortcut_buttons.addWidget(shortcut_author)
         shortcut_buttons.addWidget(shortcut_admin)
+        shortcut_buttons.setStretch(1, 1)
+        shortcut_buttons.setStretch(2, 1)
+        shortcut_buttons.setStretch(3, 1)
 
         # Create a status label and a field for error messages.
         self.connection_status = QLabel("Статус: нет подключения")
@@ -151,6 +158,7 @@ class ConnectionTab(QWidget):
 def labeled_line_edit(label: str) -> tuple[QHBoxLayout, QLineEdit]:
     input_label = QLabel(f"{label}:")
     input_label.setFont(FONT)
+    input_label.setStyleSheet(f"color: {SUBTEXT}")
     line_edit = QLineEdit()
     line_edit.setFont(FONT)
     line_edit.setPlaceholderText(label.lower())

@@ -1,20 +1,14 @@
 CREATE TABLE IF NOT EXISTS post_logs (
-    id            SERIAL    NOT NULL,
-    text          TEXT      NOT NULL,
-    title         VARCHAR   NOT NULL,
-    author_id     BIGINT    NOT NULL,
-    created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
+    id            SERIAL,
+    text          TEXT,
+    title         VARCHAR,
+    author_id     BIGINT,
+    created_at    TIMESTAMP DEFAULT NOW(),
     attachment_id BIGINT,
     event_type    VARCHAR(10) NOT NULL,
     event_time    TIMESTAMP DEFAULT now(),
     description   TEXT,
-    PRIMARY KEY(id),
-    FOREIGN KEY(author_id) REFERENCES authors(id)
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
-    FOREIGN KEY(attachment_id) REFERENCES attachments(id)
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+    PRIMARY KEY(id)
 );
 
 CREATE OR REPLACE FUNCTION log_post_event() RETURNS TRIGGER AS $$

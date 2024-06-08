@@ -66,7 +66,7 @@ class DatabaseGUI(QMainWindow):
         self.tab_widget.addTab(self.tabs.read, " Публикации ")
         self.tab_widget.addTab(self.tabs.author, " Авторы ")
         self.tab_widget.addTab(self.tabs.author, " Авторы ")
-        self.tab_widget.addTab(self.tabs.maintenance, " Система обеспечения ")
+        # self.tab_widget.addTab(self.tabs.maintenance, " Система обеспечения ")
         self.tab_widget.addTab(self.tabs.connection, " Подключение к системе ")
 
         # Wire up the remaining signals.

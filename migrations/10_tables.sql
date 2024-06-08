@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS attachments (
     PRIMARY KEY(id),
     FOREIGN KEY(author_id) REFERENCES authors(id)
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+        ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS posts (
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS posts (
     PRIMARY KEY(id),
     FOREIGN KEY(author_id) REFERENCES authors(id)
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
+        ON DELETE CASCADE,
     FOREIGN KEY(attachment_id) REFERENCES attachments(id)
         ON UPDATE NO ACTION
         ON DELETE NO ACTION

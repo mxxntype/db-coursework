@@ -120,7 +120,7 @@ class ReadTab(QWidget):
                     LOWER(p.title) LIKE '%%' || %s || '%%' AND
                     LOWER(p.text) LIKE '%%' || %s || '%%' AND
                     LOWER(a.surname || ' ' || a.name || ' ' || a.middle_name) LIKE '%%' || %s || '%%'
-                ORDER BY id ASC
+                ORDER BY id DESC
                 LIMIT %s
             """,
             [
@@ -132,6 +132,23 @@ class ReadTab(QWidget):
         )
 
         post_list = QVBoxLayout()
+        if self.connection.credentials.user in ["editor", "admin"]:
+            add_post_button = QPushButton(" Добавить новую публикацию ")
+            add_post_button.setFont(FONT)
+            add_post_button.setStyleSheet(
+                f"""
+                    QPushButton {{
+                        background-color: {ACCENT};
+                        color: black;
+                    }}
+                    QPushButton:hover {{
+                        background-color: #53afee;
+                    }}
+                """
+            )
+            add_post_button.clicked.connect(lambda: self.create_post())
+            post_list.addWidget(add_post_button)
+
         for post in posts:
             post_list.addLayout(
                 self.render_post(
@@ -258,6 +275,7 @@ class ReadTab(QWidget):
             text_edit.setReadOnly(True)
 
             # Buttons for saving changes (if allowed) and going back.
+            attachment_layout = QHBoxLayout()
             button_layout = QHBoxLayout()
             if self.connection.credentials.user in ["editor", "admin"]:
                 title_edit.setReadOnly(False)
@@ -287,7 +305,35 @@ class ReadTab(QWidget):
                 button_layout.addWidget(author_filter)
                 button_layout.addWidget(author_combobox)
                 button_layout.addWidget(update_button)
+
+                attachment_choice_hint = QLabel("Прикрепленное вложение:")
+                attachment_choice_hint.setFont(FONT)
+                attachment_choice_hint.setStyleSheet(f"color: {SUBTEXT}")
+                attachment_choice = QComboBox()
+                attachment_choice.setFont(FONT)
+                attachment_choice.addItems(
+                    map(lambda a: a[1], self.load_attachments("") or [])
+                )
+                attachment_choice.currentTextChanged.connect(
+                    lambda descr: self.update_post_attachment(post_id, descr)
+                )
+                attachment_layout.addWidget(attachment_choice_hint)
+                attachment_layout.addWidget(attachment_choice)
+                attachment_layout.addWidget(QLabel(""))
+                attachment_layout.setStretch(attachment_layout.count() - 1, 1)
             else:
+                attachment = self.load_attachment_for_post(post_id)
+                if attachment:
+                    attachment_hint = QLabel("К публикации прикреплено вложение:")
+                    attachment_hint.setFont(FONT)
+                    attachment_hint.setStyleSheet(f"color: {SUBTEXT}")
+                    attachment_label = QLabel(attachment)
+                    attachment_label.setFont(FONT)
+                    attachment_label.setStyleSheet(f"color: {ACCENT}")
+                    attachment_layout.addWidget(attachment_hint)
+                    attachment_layout.addWidget(attachment_label)
+                    attachment_layout.addWidget(QLabel(""))
+                    attachment_layout.setStretch(attachment_layout.count() - 1, 1)
                 self.set_warn(
                     "Для того, чтобы редактировать публикации, авторизуйтесь как автор или администратор."
                 )
@@ -331,6 +377,7 @@ class ReadTab(QWidget):
             layout = QVBoxLayout()
             layout.addWidget(title_edit)
             layout.addWidget(text_edit)
+            layout.addLayout(attachment_layout)
             layout.addLayout(rate_layout)
             layout.addLayout(button_layout)
             layout.addWidget(self.status_message)
@@ -371,6 +418,22 @@ class ReadTab(QWidget):
                 )
                 return self.fetch_avg_rate(id)
 
+    def load_attachment_for_post(self, post_id: int) -> str | None:
+        if self.connection.db:
+            with self.connection.db.cursor() as cursor:
+                cursor.execute(
+                    """
+                        SELECT a.data, a.description
+                        FROM attachments a
+                        INNER JOIN posts p ON a.id = p.attachment_id
+                        WHERE p.id = %s
+                    """,
+                    [post_id],
+                )
+                row: tuple | None = cursor.fetchone()
+                if row:
+                    return f"{row[0].tobytes()} <b>({row[1]})</b>"
+
     def update_post(
         self,
         post_id: int,
@@ -407,6 +470,22 @@ class ReadTab(QWidget):
                     "Недостаточно разрешений для редактирования публикации! Войдите как автор или администратор."
                 )
 
+    def update_post_attachment(self, post_id: int, desc: str) -> None:
+        if self.connection.db:
+            with self.connection.db.cursor() as cursor:
+                cursor.execute(
+                    """
+                        UPDATE posts
+                        SET attachment_id = (
+                        	SELECT a.id
+                        	FROM attachments a
+                        	WHERE a.description LIKE '%%' || %s || '%%'
+                        )
+                        WHERE id = %s;
+                   """,
+                    [desc, post_id],
+                )
+
     def load_authors(self, filter: str) -> Iterable[str] | None:
         rows: list[tuple] = self.connection.select(
             """
@@ -417,6 +496,28 @@ class ReadTab(QWidget):
             [filter],
         )
         return list(map(lambda row: f"{row[2]} {row[1]} {row[3]}, {row[4]}", rows))
+
+    def load_attachments(self, filter: str) -> list[tuple[int, str]]:
+        rows: list[tuple] = self.connection.select(
+            """
+                SELECT * FROM attachments
+                WHERE description LIKE '%%' || %s || '%%'
+                ORDER BY id ASC
+            """,
+            [filter],
+        )
+        return list(map(lambda row: (int(row[0]), str(row[1])), rows))
+
+    def create_post(self) -> None:
+        if self.connection.db:
+            with self.connection.db.cursor() as cursor:
+                cursor.execute(
+                    """
+                        INSERT INTO posts(text, title, author_id)
+                        VALUES ('', '', 1)
+                    """
+                )
+                self.list_posts()
 
     def set_info(self, info: str):
         self.status_message.setText(info)
