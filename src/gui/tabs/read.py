@@ -120,7 +120,7 @@ class ReadTab(QWidget):
                     LOWER(p.title) LIKE '%%' || %s || '%%' AND
                     LOWER(p.text) LIKE '%%' || %s || '%%' AND
                     LOWER(a.surname || ' ' || a.name || ' ' || a.middle_name) LIKE '%%' || %s || '%%'
-                ORDER BY id DESC
+                ORDER BY created_at DESC
                 LIMIT %s
             """,
             [
